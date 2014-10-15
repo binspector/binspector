@@ -41,9 +41,3 @@ After building, the binspector binary will be inside the `../bin` directory.
 ### Option 2: Build with Xcode
 
 Binspector now has an Xcode project contained within the `xcode` directory of the repository. Building from within Xcode should be straightforward. All intermediate files and binaries produced will go into the same `./built_artifacts/` directory (though in a different location).
-
-## Future Plans
-
-See [here][future_plans] for a list
-
-[future_plans]: binspector/wiki/FuturePlans
