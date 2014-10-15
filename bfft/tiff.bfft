@@ -1,0 +1,536 @@
+struct iop_tag_name_t
+{
+    invis tag_prefix = 'iop';
+
+    enumerate (tag_number)
+    {
+        1:    { invis value = "InteroperabilityIndex"; }
+        2:    { invis value = "InteroperabilityVersion"; }
+        4096: { invis value = "RelatedImageFileFormat"; }
+        4097: { invis value = "RelatedImageWidth"; }
+        4098: { invis value = "RelatedImageLength"; }
+
+        default: { invis value = tag_number; }
+    }
+}
+
+struct gps_tag_name_t
+{
+    invis tag_prefix = 'gps';
+
+    enumerate (tag_number)
+    {
+        0:  { invis value = "GPSVersionID"; }
+        1:  { invis value = "GPSLatitudeRef"; }
+        2:  { invis value = "GPSLatitude"; }
+        3:  { invis value = "GPSLongitudeRef"; }
+        4:  { invis value = "GPSLongitude"; }
+        5:  { invis value = "GPSAltitudeRef"; }
+        6:  { invis value = "GPSAltitude"; }
+        7:  { invis value = "GPSTimeStamp"; }
+        8:  { invis value = "GPSSatellites"; }
+        9:  { invis value = "GPSStatus"; }
+        10: { invis value = "GPSMeasureMode"; }
+        11: { invis value = "GPSDOP"; }
+        12: { invis value = "GPSSpeedRef"; }
+        13: { invis value = "GPSSpeed"; }
+        14: { invis value = "GPSTrackRef"; }
+        15: { invis value = "GPSTrack"; }
+        16: { invis value = "GPSImgDirectionRef"; }
+        17: { invis value = "GPSImgDirection"; }
+        18: { invis value = "GPSMapDatum"; }
+        19: { invis value = "GPSDestLatitudeRef"; }
+        20: { invis value = "GPSDestLatitude"; }
+        21: { invis value = "GPSDestLongitudeRef"; }
+        22: { invis value = "GPSDestLongitude"; }
+        23: { invis value = "GPSDestBearingRef"; }
+        24: { invis value = "GPSDestBearing"; }
+        25: { invis value = "GPSDestDistanceRef"; }
+        26: { invis value = "GPSDestDistance"; }
+        27: { invis value = "GPSProcessingMethod"; }
+        28: { invis value = "GPSAreaInformation"; }
+        29: { invis value = "GPSDateStamp"; }
+        30: { invis value = "GPSDifferential"; }
+
+        default: { invis value = tag_number; }
+    }
+}
+
+struct ifd_tag_name_t
+{
+    invis tag_prefix = 'ifd';
+
+    enumerate (tag_number)
+    {
+        11: { invis value = "ProcessingSoftware"; }
+        254: { invis value = "NewSubfileType"; }
+        255: { invis value = "SubfileType"; }
+        256: { invis value = "ImageWidth"; }
+        257: { invis value = "ImageLength"; }
+        258: { invis value = "BitsPerSample"; }
+        259: { invis value = "Compression"; }
+        262: { invis value = "PhotometricInterpretation"; }
+        263: { invis value = "Threshholding"; }
+        264: { invis value = "CellWidth"; }
+        265: { invis value = "CellLength"; }
+        266: { invis value = "FillOrder"; }
+        269: { invis value = "DocumentName"; }
+        270: { invis value = "ImageDescription"; }
+        271: { invis value = "Make"; }
+        272: { invis value = "Model"; }
+        273: { invis value = "StripOffsets"; }
+        274: { invis value = "Orientation"; }
+        277: { invis value = "SamplesPerPixel"; }
+        278: { invis value = "RowsPerStrip"; }
+        279: { invis value = "StripByteCounts"; }
+        280: { invis value = "MinSampleValue"; }
+        281: { invis value = "MaxSampleValue"; }
+        282: { invis value = "XResolution"; }
+        283: { invis value = "YResolution"; }
+        284: { invis value = "PlanarConfiguration"; }
+        285: { invis value = "PageName"; }
+        286: { invis value = "XPosition"; }
+        287: { invis value = "YPosition"; }
+        288: { invis value = "FreeOffsets"; }
+        289: { invis value = "FreeByteCounts"; }
+        290: { invis value = "GrayResponseUnit"; }
+        291: { invis value = "GrayResponseCurve"; }
+        292: { invis value = "T4Options"; }
+        293: { invis value = "T6Options"; }
+        296: { invis value = "ResolutionUnit"; }
+        297: { invis value = "PageNumber"; }
+        301: { invis value = "TransferFunction"; }
+        305: { invis value = "Software"; }
+        306: { invis value = "DateTime"; }
+        315: { invis value = "Artist"; }
+        316: { invis value = "HostComputer"; }
+        317: { invis value = "Predictor"; }
+        318: { invis value = "WhitePoint"; }
+        319: { invis value = "PrimaryChromaticities"; }
+        320: { invis value = "ColorMap"; }
+        321: { invis value = "HalftoneHints"; }
+        322: { invis value = "TileWidth"; }
+        323: { invis value = "TileLength"; }
+        324: { invis value = "TileOffsets"; }
+        325: { invis value = "TileByteCounts"; }
+        326: { invis value = "BadFaxLines"; }
+        327: { invis value = "CleanFaxData"; }
+        328: { invis value = "ConsecutiveBadFaxLines"; }
+        330: { invis value = "SubIFDs"; }
+        332: { invis value = "InkSet"; }
+        333: { invis value = "InkNames"; }
+        334: { invis value = "NumberOfInks"; }
+        336: { invis value = "DotRange"; }
+        337: { invis value = "TargetPrinter"; }
+        338: { invis value = "ExtraSamples"; }
+        339: { invis value = "SampleFormat"; }
+        340: { invis value = "SMinSampleValue"; }
+        341: { invis value = "SMaxSampleValue"; }
+        342: { invis value = "TransferRange"; }
+        343: { invis value = "ClipPath"; }
+        344: { invis value = "XClipPathUnits"; }
+        345: { invis value = "YClipPathUnits"; }
+        346: { invis value = "Indexed"; }
+        347: { invis value = "JPEGTables"; }
+        351: { invis value = "OPIProxy"; }
+        400: { invis value = "GlobalParametersIFD"; }
+        401: { invis value = "ProfileType"; }
+        402: { invis value = "FaxProfile"; }
+        403: { invis value = "CodingMethods"; }
+        404: { invis value = "VersionYear"; }
+        405: { invis value = "ModeNumber"; }
+        433: { invis value = "Decode"; }
+        434: { invis value = "DefaultImageColor"; }
+        512: { invis value = "JPEGProc"; }
+        513: { invis value = "JPEGInterchangeFormat"; }
+        514: { invis value = "JPEGInterchangeFormatLength"; }
+        515: { invis value = "JPEGRestartInterval"; }
+        517: { invis value = "JPEGLosslessPredictors"; }
+        518: { invis value = "JPEGPointTransforms"; }
+        519: { invis value = "JPEGQTables"; }
+        520: { invis value = "JPEGDCTables"; }
+        521: { invis value = "JPEGACTables"; }
+        529: { invis value = "YCbCrCoefficients"; }
+        530: { invis value = "YCbCrSubSampling"; }
+        531: { invis value = "YCbCrPositioning"; }
+        532: { invis value = "ReferenceBlackWhite"; }
+        559: { invis value = "StripRowCounts"; }
+        700: { invis value = "XMP"; }
+        18246: { invis value = "Rating"; }
+        18249: { invis value = "RatingPercent"; }
+        32781: { invis value = "ImageID"; }
+        33421: { invis value = "CFARepeatPatternDim"; }
+        33422: { invis value = "CFAPattern"; }
+        33423: { invis value = "BatteryLevel"; }
+        33432: { invis value = "Copyright"; }
+        33434: { invis value = "ExposureTime"; }
+        33437: { invis value = "FNumber"; }
+        33723: { invis value = "IPTCNAA"; }
+        34377: { invis value = "ImageResources"; }
+        34665: { invis value = "ExifTag"; }
+        34675: { invis value = "InterColorProfile"; }
+        34732: { invis value = "ImageLayer"; }
+        34850: { invis value = "ExposureProgram"; }
+        34852: { invis value = "SpectralSensitivity"; }
+        34853: { invis value = "GPSTag"; }
+        34855: { invis value = "ISOSpeedRatings"; }
+        34856: { invis value = "OECF"; }
+        34857: { invis value = "Interlace"; }
+        34858: { invis value = "TimeZoneOffset"; }
+        34859: { invis value = "SelfTimerMode"; }
+        34864: { invis value = "SensitivityType"; }
+        34865: { invis value = "StandardOutputSensitivity"; }
+        34866: { invis value = "RecommendedExposureIndex"; }
+        34867: { invis value = "ISOSpeed"; }
+        34868: { invis value = "ISOSpeedLatitudeyyy"; }
+        34869: { invis value = "ISOSpeedLatitudezzz"; }
+        36864: { invis value = "ExifVersion"; }
+        36867: { invis value = "DateTimeOriginal"; }
+        36868: { invis value = "DateTimeDigitized"; }
+        37121: { invis value = "ComponentsConfiguration"; }
+        37122: { invis value = "CompressedBitsPerPixel"; }
+        37377: { invis value = "ShutterSpeedValue"; }
+        37378: { invis value = "ApertureValue"; }
+        37379: { invis value = "BrightnessValue"; }
+        37380: { invis value = "ExposureBiasValue"; }
+        37381: { invis value = "MaxApertureValue"; }
+        37382: { invis value = "SubjectDistance"; }
+        37383: { invis value = "MeteringMode"; }
+        37384: { invis value = "LightSource"; }
+        37385: { invis value = "Flash"; }
+        37386: { invis value = "FocalLength"; }
+        37387: { invis value = "FlashEnergy"; }
+        37388: { invis value = "SpatialFrequencyResponse"; }
+        37389: { invis value = "Noise"; }
+        37390: { invis value = "FocalPlaneXResolution"; }
+        37391: { invis value = "FocalPlaneYResolution"; }
+        37392: { invis value = "FocalPlaneResolutionUnit"; }
+        37393: { invis value = "ImageNumber"; }
+        37394: { invis value = "SecurityClassification"; }
+        37395: { invis value = "ImageHistory"; }
+        37396: { invis value = "SubjectLocation"; }
+        37397: { invis value = "ExposureIndex"; }
+        37398: { invis value = "TIFFEPStandardID"; }
+        37399: { invis value = "SensingMethod"; }
+        37500: { invis value = "MakerNote"; }
+        37510: { invis value = "UserComment"; }
+        37520: { invis value = "SubsecTime"; }
+        37521: { invis value = "SubsecTimeOriginal"; }
+        37522: { invis value = "SubsecTimeDigitized"; }
+        40091: { invis value = "XPTitle"; }
+        40092: { invis value = "XPComment"; }
+        40093: { invis value = "XPAuthor"; }
+        40094: { invis value = "XPKeywords"; }
+        40095: { invis value = "XPSubject"; }
+        40960: { invis value = "FlashpixVersion"; }
+        40961: { invis value = "ColorSpace"; }
+        40962: { invis value = "PixelXDimension"; }
+        40963: { invis value = "PixelYDimension"; }
+        40964: { invis value = "RelatedSoundFile"; }
+        40965: { invis value = "InteroperabilityTag"; }
+        41483: { invis value = "FlashEnergy"; }
+        41484: { invis value = "SpatialFrequencyResponse"; }
+        41486: { invis value = "FocalPlaneXResolution"; }
+        41487: { invis value = "FocalPlaneYResolution"; }
+        41488: { invis value = "FocalPlaneResolutionUnit"; }
+        41492: { invis value = "SubjectLocation"; }
+        41493: { invis value = "ExposureIndex"; }
+        41495: { invis value = "SensingMethod"; }
+        41728: { invis value = "FileSource"; }
+        41729: { invis value = "SceneType"; }
+        41730: { invis value = "CFAPattern"; }
+        41985: { invis value = "CustomRendered"; }
+        41986: { invis value = "ExposureMode"; }
+        41987: { invis value = "WhiteBalance"; }
+        41988: { invis value = "DigitalZoomRatio"; }
+        41989: { invis value = "FocalLengthIn35mmFilm"; }
+        41990: { invis value = "SceneCaptureType"; }
+        41991: { invis value = "GainControl"; }
+        41992: { invis value = "Contrast"; }
+        41993: { invis value = "Saturation"; }
+        41994: { invis value = "Sharpness"; }
+        41995: { invis value = "DeviceSettingDescription"; }
+        41996: { invis value = "SubjectDistanceRange"; }
+        42016: { invis value = "ImageUniqueID"; }
+        42032: { invis value = "CameraOwnerName"; }
+        42033: { invis value = "BodySerialNumber"; }
+        42033: { invis value = "LensSpecification"; }
+        42034: { invis value = "LensSpecification"; }
+        42035: { invis value = "LensMake"; }
+        42036: { invis value = "LensModel"; }
+        42037: { invis value = "LensSerialNumber"; }
+        50341: { invis value = "PrintImageMatching"; }
+        50706: { invis value = "DNGVersion"; }
+        50707: { invis value = "DNGBackwardVersion"; }
+        50708: { invis value = "UniqueCameraModel"; }
+        50709: { invis value = "LocalizedCameraModel"; }
+        50710: { invis value = "CFAPlaneColor"; }
+        50711: { invis value = "CFALayout"; }
+        50712: { invis value = "LinearizationTable"; }
+        50713: { invis value = "BlackLevelRepeatDim"; }
+        50714: { invis value = "BlackLevel"; }
+        50715: { invis value = "BlackLevelDeltaH"; }
+        50716: { invis value = "BlackLevelDeltaV"; }
+        50717: { invis value = "WhiteLevel"; }
+        50718: { invis value = "DefaultScale"; }
+        50719: { invis value = "DefaultCropOrigin"; }
+        50720: { invis value = "DefaultCropSize"; }
+        50721: { invis value = "ColorMatrix1"; }
+        50722: { invis value = "ColorMatrix2"; }
+        50723: { invis value = "CameraCalibration1"; }
+        50724: { invis value = "CameraCalibration2"; }
+        50725: { invis value = "ReductionMatrix1"; }
+        50726: { invis value = "ReductionMatrix2"; }
+        50727: { invis value = "AnalogBalance"; }
+        50728: { invis value = "AsShotNeutral"; }
+        50729: { invis value = "AsShotWhiteXY"; }
+        50730: { invis value = "BaselineExposure"; }
+        50731: { invis value = "BaselineNoise"; }
+        50732: { invis value = "BaselineSharpness"; }
+        50733: { invis value = "BayerGreenSplit"; }
+        50734: { invis value = "LinearResponseLimit"; }
+        50735: { invis value = "CameraSerialNumber"; }
+        50736: { invis value = "LensInfo"; }
+        50737: { invis value = "ChromaBlurRadius"; }
+        50738: { invis value = "AntiAliasStrength"; }
+        50739: { invis value = "ShadowScale"; }
+        50740: { invis value = "DNGPrivateData"; }
+        50741: { invis value = "MakerNoteSafety"; }
+        50778: { invis value = "CalibrationIlluminant1"; }
+        50779: { invis value = "CalibrationIlluminant2"; }
+        50780: { invis value = "BestQualityScale"; }
+        50781: { invis value = "RawDataUniqueID"; }
+        50827: { invis value = "OriginalRawFileName"; }
+        50828: { invis value = "OriginalRawFileData"; }
+        50829: { invis value = "ActiveArea"; }
+        50830: { invis value = "MaskedAreas"; }
+        50831: { invis value = "AsShotICCProfile"; }
+        50832: { invis value = "AsShotPreProfileMatrix"; }
+        50833: { invis value = "CurrentICCProfile"; }
+        50834: { invis value = "CurrentPreProfileMatrix"; }
+        50879: { invis value = "ColorimetricReference"; }
+        50931: { invis value = "CameraCalibrationSignature"; }
+        50932: { invis value = "ProfileCalibrationSignature"; }
+        50934: { invis value = "AsShotProfileName"; }
+        50935: { invis value = "NoiseReductionApplied"; }
+        50936: { invis value = "ProfileName"; }
+        50937: { invis value = "ProfileHueSatMapDims"; }
+        50938: { invis value = "ProfileHueSatMapData1"; }
+        50939: { invis value = "ProfileHueSatMapData2"; }
+        50940: { invis value = "ProfileToneCurve"; }
+        50941: { invis value = "ProfileEmbedPolicy"; }
+        50942: { invis value = "ProfileCopyright"; }
+        50964: { invis value = "ForwardMatrix1"; }
+        50965: { invis value = "ForwardMatrix2"; }
+        50966: { invis value = "PreviewApplicationName"; }
+        50967: { invis value = "PreviewApplicationVersion"; }
+        50968: { invis value = "PreviewSettingsName"; }
+        50969: { invis value = "PreviewSettingsDigest"; }
+        50970: { invis value = "PreviewColorSpace"; }
+        50971: { invis value = "PreviewDateTime"; }
+        50972: { invis value = "RawImageDigest"; }
+        50973: { invis value = "OriginalRawFileDigest"; }
+        50974: { invis value = "SubTileBlockSize"; }
+        50975: { invis value = "RowInterleaveFactor"; }
+        50981: { invis value = "ProfileLookTableDims"; }
+        50982: { invis value = "ProfileLookTableData"; }
+        51008: { invis value = "OpcodeList1"; }
+        51009: { invis value = "OpcodeList2"; }
+        51022: { invis value = "OpcodeList3"; }
+        51041: { invis value = "NoiseProfile"; }
+
+        34665: { invis value = "ExifIFD"; }
+        34853: { invis value = "GPSIFD"; }
+        40965: { invis value = "InteroperabilityIFD"; }
+
+        default: { invis value = tag_number; }
+    }
+}
+
+struct rational_t
+{
+    long_t numerator;
+    long_t denominator;
+
+    invis value = print(numerator, "/", denominator);
+    summary value;
+}
+
+struct srational_t
+{
+    slong_t numerator;
+    slong_t denominator;
+
+    invis value = print(numerator, "/", denominator);
+    summary value;
+}
+
+struct ifd_value_t
+{
+    invis size = field_type_size * component_count;
+    invis is_remote = size > 4;
+
+    if (tag_number == 34665 ||
+    	tag_number == 34853 ||
+    	tag_number == 40965)
+    {
+        long_t relative_offset;
+        invis  offset = ptoi(startof(@header)) + relative_offset;
+
+        if (tag_number == 34853)
+        {
+            typedef gps_tag_name_t tag_name_t; // switch to the GPS field tag names
+
+            ifd_t ifd @ offset;
+        }
+        else if (tag_number == 40965)
+        {
+            typedef iop_tag_name_t tag_name_t; // switch to the Interoperability field tag names
+
+            ifd_t ifd @ offset;
+        }
+        else
+            ifd_t ifd @ offset; // no field tag name switching
+
+        invis value = "{ifd}";
+    }
+    else if (is_remote)
+    {
+        long_t relative_offset;
+        invis  offset = ptoi(startof(@header)) + relative_offset;
+
+        if (component_count == 1)
+            field_t data @ offset;
+        else
+            field_t data[component_count] @ offset;
+
+        if (component_count == 1 && (field_type == 5 || field_type == 10))
+            invis value = data.value;
+        else if (tag_number == 50781 || tag_number == 50969 || tag_number == 50972 || tag_number == 50973)
+            // REVISIT: expecting a raw md5 digest here... how to print it?
+            invis value = print(data);
+        else if (field_type == 1 || field_type == 2 || field_type == 6 || field_type == 7)
+            invis value = str(@data);
+        else if (component_count == 1)
+            invis value = print(data);
+        else
+            invis value = "<multiple>";
+    }
+    else
+    {
+        if (component_count == 1)
+            field_t data;
+        else
+            field_t data[component_count];
+
+        invis extra_space = 4 - size;
+
+        if (extra_space != 0)
+            skip unused[extra_space];
+
+        if (component_count == 1)
+            invis value = print(data);
+        else
+            invis value = "<multiple>";
+    }
+
+    summary value;
+}
+
+struct ifd_entry_t
+{
+    word_t tag_number;
+    word_t field_type;
+
+    //
+    // In BFFTv2, much of this structure could distill to:
+    //
+    //     ifd_value_t<field_t>(field_type_size)
+    //
+    // ... which would be really slick.
+    //
+
+    enumerate (field_type)
+    {
+        1  : invis field_type_size = 1;
+        2  : invis field_type_size = 1;
+        3  : invis field_type_size = 2;
+        4  : invis field_type_size = 4;
+        5  : invis field_type_size = 8;
+        6  : invis field_type_size = 1;
+        7  : invis field_type_size = 1;
+        8  : invis field_type_size = 2;
+        9  : invis field_type_size = 4;
+        10 : invis field_type_size = 8;
+        11 : invis field_type_size = 4;
+        12 : invis field_type_size = 8;
+    }
+
+    long_t component_count;
+
+    // REVISIT (fbrereto) : Gotta figure out the scoping of an enumerate and if
+    //                      clauses so we can roll up these typedefs to the enumerate
+    //                      instead of having them separate like this.
+
+    if (field_type == 1)       { typedef byte_t      field_t; ifd_value_t value; }
+    else if (field_type == 2)  { typedef byte_t      field_t; ifd_value_t value; }
+    else if (field_type == 3)  { typedef word_t      field_t; ifd_value_t value; }
+    else if (field_type == 4)  { typedef long_t      field_t; ifd_value_t value; }
+    else if (field_type == 5)  { typedef rational_t  field_t; ifd_value_t value; }
+    else if (field_type == 6)  { typedef sbyte_t     field_t; ifd_value_t value; }
+    else if (field_type == 7)  { typedef sbyte_t     field_t; ifd_value_t value; }
+    else if (field_type == 8)  { typedef sword_t     field_t; ifd_value_t value; }
+    else if (field_type == 9)  { typedef slong_t     field_t; ifd_value_t value; }
+    else if (field_type == 10) { typedef srational_t field_t; ifd_value_t value; }
+    else if (field_type == 11) { typedef float_t     field_t; ifd_value_t value; }
+    else if (field_type == 12) { typedef double_t    field_t; ifd_value_t value; }
+
+    // tag_name_t is a typedef that refers to one of the three sets up top
+    tag_name_t name; // sizeless (not stateless!)
+
+    summary name.value, ': ', summaryof(value);
+    notify name.tag_prefix, '.', name.value, ": ", summaryof(value);
+}
+
+struct ifd_t
+{
+    word_t      ifd_entry_count;
+    ifd_entry_t entry_set[ifd_entry_count] shuffle;
+    long_t      next_ifd_offset;
+
+    // always ifd1?
+    if (next_ifd_offset != 0)
+        ifd_t next_ifd @ padd(startof(@header), next_ifd_offset);
+}
+
+struct tiff_t
+{
+    unsigned 16 big header; // 0x4949 (little) or 0x4d4d (big)
+
+    enumerate (header)
+    {
+        0x4D4D : const BE_k = true;
+        0x4949 : const BE_k = false;
+    }
+
+    typedef unsigned 8  BE_k byte_t;
+    typedef unsigned 16 BE_k word_t;
+    typedef unsigned 32 BE_k long_t;
+    typedef unsigned 8  BE_k sbyte_t;
+    typedef unsigned 16 BE_k sword_t;
+    typedef unsigned 32 BE_k slong_t;
+    typedef float    32 BE_k float_t;
+    typedef float    64 BE_k double_t;
+    typedef ifd_tag_name_t   tag_name_t;
+
+    word_t tag_mark;
+
+    invariant ok_tag_mark = tag_mark == 42;
+
+    long_t ifd_offset; // usually 8 for IFD 0
+
+    if (ifd_offset == 8)
+        ifd_t ifd;
+    else
+        ifd_t ifd @ padd(startof(@header), ifd_offset);
+}

@@ -1,0 +1,109 @@
+# Binspector Jamroot
+
+path-constant TOP : . ;
+
+import os ;
+import testing ;
+import feature ;
+
+# Permits overriding several default directories by specifying values in the OS
+# environment table.
+
+local boost-path = [ os.environ BOOST_PATH ] ;
+
+if $(boost-path)
+{
+    boost-path = $(boost-path) ;
+}
+else
+{
+    boost-path = ../boost_libraries ;
+}
+
+path-constant boost-path : $(boost-path) ;
+
+use-project /boost : $(boost-path)  ;
+
+local asl-path = [ os.environ ASL_PATH ] ;
+
+if $(asl-path)
+{
+    asl-path = $(asl-path) ;
+}
+else
+{
+    asl-path = ../adobe_source_libraries ;
+}
+
+path-constant asl-path : $(asl-path) ;
+
+local apl-path = [ os.environ APL_PATH ] ;
+
+if $(apl-path)
+{
+    apl-path = $(apl-path) ;
+}
+else
+{
+    apl-path = ../adobe_platform_libraries ;
+}
+
+path-constant apl-path : $(apl-path) ;
+
+# Set up c++11 support as a feature so it will propagate into the
+# boost dependencies
+
+feature.feature cpp11 :
+    on :
+    composite optional propagated
+    ;
+
+feature.compose <cpp11>on :
+        <cxxflags>"-std=c++11 -fconstexpr-depth=1024 -ftemplate-depth=1024"
+    ;
+
+feature.feature libc++ :
+    on :
+    composite optional propagated
+    ;
+
+feature.compose <libc++>on :
+        <cxxflags>"-stdlib=libc++"
+        <define>BOOST_NO_CXX11_NUMERIC_LIMITS=1
+        <linkflags>"-lc++"
+    ;
+
+project binspector
+    : requirements
+        <define>BOOST_ALL_NO_LIB=1
+        <define>ADOBE_SERIALIZATION=1
+        <define>ADOBE_STD_SERIALIZATION=1
+
+        # Clang toolset specializations
+        <toolset>clang:<cpp11>on
+        <toolset>clang:<libc++>on
+
+        # MSVC specializations
+        <toolset>msvc:<cxxflags>"-DUNICODE -D_UNICODE"
+        <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
+        <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
+        <toolset>msvc:<define>_WIN32_WINNT=0x400
+        <toolset>msvc:<define>ADOBE_TEST_MICROSOFT_NO_DEPRECATE=0
+
+        # MSVC threading specializations
+        <toolset>msvc,<threading>multi:<define>USE_WINTHREAD
+
+        # MSVC 8 specializations
+        <toolset>msvc-8.0:<cxxflags>"/W3 /WX /Wp64 /Zc:wchar_t /Zc:forScope"
+
+        # MSVC 9 specializations
+        <toolset>msvc-9.0:<cxxflags>"/W3 /WX /Zc:wchar_t /Zc:forScope"
+    : default-build
+        <link>static
+        <threading>multi
+        <preserve-test-targets>on
+    : build-dir
+        $(TOP)/../built_artifacts
+    ;
+
+build-project app ;

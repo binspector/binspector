@@ -1,0 +1,224 @@
+struct header_t
+{
+    unsigned 8 big signature[8];
+
+    invariant is_high_bit_ok  = signature[0] == 137;
+    invariant is_p            = signature[1] == fcc('P');
+    invariant is_n            = signature[2] == fcc('N');
+    invariant is_g            = signature[3] == fcc('G');
+    invariant is_dos_le1      = signature[4] == 0x0D;
+    invariant is_dos_le2      = signature[5] == 0x0A;
+    invariant is_dos_eof_char = signature[6] == 0x1A;
+    invariant is_unix_le      = signature[7] == 0x0A;
+}
+
+struct ihdr_t
+{
+    const summary_str = 'IHDR' noprint;
+
+    unsigned 32 big width;
+    unsigned 32 big height;
+    unsigned 8  big bit_depth;
+    unsigned 8  big color_type;
+    unsigned 8  big compression_method;
+    unsigned 8  big filter_method;
+    unsigned 8  big interlace_method;
+
+    enumerate (color_type) [ 0, 2, 3, 4, 6 ]
+    enumerate (bit_depth) [ 1, 2, 4, 8, 16 ]
+}
+
+struct palette_entry_t
+{
+    unsigned 8 big red;
+    unsigned 8 big green;
+    unsigned 8 big blue;
+}
+
+struct plte_t
+{
+    const summary_str = 'PLTE' noprint;
+
+    invariant valid_chunk_length = length % 3 == 0;
+
+    const palette_entry_count = length / 3;
+    palette_entry_t palette_set[palette_entry_count];
+}
+
+struct text_t
+{
+    unsigned 8 big keyword[terminator: 0];
+    skip           text[length - sizeof(@keyword)];
+
+    const keyword_str = str(@keyword);
+    const text_str = str(@text);
+
+    const summary_str = strcat('tEXt: ', keyword_str) noprint;
+}
+
+struct itxt_t
+{
+    unsigned 8 big keyword[terminator: 0];
+    unsigned 8 big compression_flag;
+    unsigned 8 big compression_method;
+    unsigned 8 big language_tag[terminator: 0];
+    unsigned 8 big translated_keyword[terminator: 0];
+    skip           text[length - sizeof(@keyword, @translated_keyword)];
+
+    const keyword_str = str(@keyword);
+    const text_str = str(@text);
+
+    const summary_str = strcat('iTXt: ', keyword_str) noprint;
+}
+
+struct ztxt_t
+{
+    unsigned 8 big keyword[terminator: 0];
+    unsigned 8 big compression_method;
+    skip           text[length - sizeof(@keyword, @compression_method)];
+
+    const keyword_str = str(@keyword);
+    const text_str = str(@text);
+
+    const summary_str = strcat('zTXt: ', keyword_str) noprint;
+}
+
+struct gama_t
+{
+    unsigned 32 big gamma;
+
+    const summary_str = 'gAMA' noprint;
+}
+
+struct chrm_t
+{
+    // Each value is encoded as a four-byte PNG unsigned integer,
+    // representing the x or y value times 100000.
+    //
+    // Example: A value of 0.3127 would be stored as the integer 31270.
+
+
+    unsigned 32 big white_point_x;
+    unsigned 32 big white_point_y;
+    unsigned 32 big red_x;
+    unsigned 32 big red_y;
+    unsigned 32 big green_x;
+    unsigned 32 big green_y;
+    unsigned 32 big blue_x;
+    unsigned 32 big blue_y;
+}
+
+struct trns_t
+{
+    const color_type = main.chunk_set[0].details.color_type;
+
+    invariant ok_color_type = color_type != 4 && color_type != 6;
+
+    if (color_type == 0)
+    {
+        // Grayscale
+        unsigned 16 big sample;
+    }
+    else if (color_type == 2)
+    {
+        // RGB
+
+        unsigned 16 big r_sample;
+        unsigned 16 big b_sample;
+        unsigned 16 big g_sample;
+    }
+    else if (color_type == 3)
+    {
+        // Indexed; one 8 bit entry per palette entry
+
+        unsigned 8 big alpha[length];
+    }
+
+    const summary_str = 'tRNS' noprint;
+}
+
+struct iend_t
+{
+    const summary_str = 'IEND' noprint;
+
+    invariant zero_length = length == 0;
+
+    signal IEND_found = true;
+}
+
+struct unimplemented_t
+{
+    const summary_str = strcat(type_str, ' skipped') noprint;
+
+    if (length != 0)
+        skip unimplemented[length];
+}
+
+struct chunk_t
+{
+    unsigned 32 big length;
+    unsigned 32 big type;
+
+    const type_str = str(@type);
+    const type0 = byte(ptoi(startof(@type)) + 0) noprint;
+    const type1 = byte(ptoi(startof(@type)) + 1) noprint;
+    const type2 = byte(ptoi(startof(@type)) + 2) noprint;
+    const type3 = byte(ptoi(startof(@type)) + 3) noprint;
+
+    const     is_critical_chunk   = type0 >= fcc('A') && type0 <= fcc('Z');
+    const     is_public_chunk     = type1 >= fcc('A') && type1 <= fcc('Z');
+    invariant is_uppercase        = type2 >= fcc('A') && type2 <= fcc('Z'); // reserved character
+    const     is_copyable_chunk   = type3 >= fcc('a') && type3 <= fcc('z');
+
+    sentry (length) enumerate (type)
+    {
+        // Critical chunks
+        fcc('IHDR') : ihdr_t          details;
+        fcc('IEND') : iend_t          details;    
+        fcc('PLTE') : plte_t          details;
+        //fcc('IDAT') : unimplemented_t details;
+
+        // Transparency Information
+        fcc('tRNS') : trns_t          details;
+
+        // Color space information
+        fcc('cHRM') : chrm_t          details;
+        fcc('gAMA') : gama_t          details;
+        //fcc('iCCP') : unimplemented_t details;
+        //fcc('sBIT') : unimplemented_t details;
+        //fcc('sRGB') : unimplemented_t details;
+
+        // Textual information
+        fcc('iTXt') : itxt_t          details;
+        fcc('tEXt') : text_t          details;
+        fcc('zTXt') : ztxt_t          details;
+
+        // Miscellaneous information
+        //fcc('bKGD') : unimplemented_t details;
+        //fcc('hIST') : unimplemented_t details;
+        //fcc('pHYs') : unimplemented_t details;
+        //fcc('sPLT') : unimplemented_t details;
+
+        // Time stamp information
+        //fcc('tIME') : unimplemented_t details;
+
+        default : unimplemented_t details;
+    }
+
+    unsigned 32 big crc;
+
+    invariant nonzero_crc = crc != 0; // zero length data will still have a nonzero CRC.
+
+    summary details.summary_str;
+}
+
+struct main
+{
+    slot IEND_found = false;
+
+    header_t header;
+    chunk_t  chunk_set[while: !IEND_found] shuffle;
+
+    invariant is_IHDR_first = chunk_set[0].type_str == 'IHDR';
+    invariant is_IEND_last = chunk_set[card(@chunk_set) - 1].type_str == 'IEND';
+}

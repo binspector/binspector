@@ -1,0 +1,101 @@
+struct utf8_t
+{
+    const byte = peek() noprint;
+
+    if ((byte & 0x80) == 0x80)
+    {
+        if ((byte & 0xF0) == 0xF0)
+        {
+            unsigned 5 big header; // should be 11110b
+            unsigned 3 big b1p1; // byte 1, part 1
+            unsigned 2 big utf8_cont1; // should be 10b
+            unsigned 2 big b1p2; // byte 1, part 2
+            unsigned 4 big b2p1; // byte 2, part 1
+            unsigned 2 big utf8_cont2; // should be 10b
+            unsigned 4 big b2p2; // byte 2, part 2
+            unsigned 2 big b3p1; // byte 3, part 1
+            unsigned 2 big utf8_cont3; // should be 10b
+            unsigned 6 big b3p2; // byte 3, part 2
+
+            invariant valid_header = header == 30;
+            invariant valid_cont1 = utf8_cont1 == 2;
+            invariant valid_cont2 = utf8_cont2 == 2;
+            invariant valid_cont3 = utf8_cont3 == 2;
+
+            const byte1 = (b1p1 << 3) | b1p2 noprint;
+            const byte2 = (b2p1 << 4) | b2p2 noprint;
+            const byte3 = (b3p1 << 6) | b3p2 noprint;
+
+            const utf32 = byte1 << 16 | byte2 << 8 | byte3;
+
+            notify "found ", utf32, " (", str(this), ")";
+        }
+        else if ((byte & 0xE0) == 0xE0)
+        {
+            unsigned 4 big header; // should be 1110b
+            unsigned 4 big b1p1; // byte 1, part 1
+            unsigned 2 big utf8_cont1; // should be 10b
+            unsigned 4 big b1p2; // byte 1, part 2
+            unsigned 2 big b2p1; // byte 2, part 1
+            unsigned 2 big utf8_cont2; // should be 10b
+            unsigned 6 big b2p2; // byte 2, part 2
+
+            invariant valid_header = header == 14;
+            invariant valid_cont1 = utf8_cont1 == 2;
+            invariant valid_cont2 = utf8_cont2 == 2;
+
+            const byte1 = (b1p1 << 4) | b1p2 noprint;
+            const byte2 = (b2p1 << 6) | b2p2 noprint;
+            const utf16 = byte1 << 8 | byte2;
+
+            notify "found ", utf16, " (", str(this), ")";
+        }
+        else if ((byte & 0xC0) == 0xC0)
+        {
+            unsigned 3 big header; // should be 110b
+            unsigned 3 big b1p1; // byte 1, part 1
+            unsigned 2 big b2p1; // byte 2, part 1
+            unsigned 2 big utf8_cont1; // should be 10b
+            unsigned 6 big b2p2; // byte 2, part 2
+
+            invariant valid_header = header == 6;
+            invariant valid_cont1 = utf8_cont1 == 2;
+
+            const byte1 = b1p1 noprint;
+            const byte2 = (b2p1 << 6) | b2p2 noprint;
+            const utf16 = byte1 << 8 | byte2;
+
+            notify "found ", utf16, " (", str(this), ")";
+        }
+        else if ((byte & 0x80) == 0x80)
+        {
+            notify "Unexpected utf8 continuation character";
+
+            unsigned 8 big continuation_char;
+        }
+        else
+        {
+            invariant bad_utf8 = false;
+        }
+    }
+    else
+    {
+        unsigned 8 big char;
+        notify "found ", char, " (", str(this), ")";
+    }
+}
+
+struct main
+{
+    slot eof = false;
+
+    utf8_t string[while: !eof];
+
+    // a series of bitwise operator tests
+    invariant and_test    = (0x85 & 0x80) == 0x80;
+    invariant xor_test    = (42 ^ 2) == 0x28;
+    invariant or_test     = (0x20 | 0x0A) == 42;
+    invariant rshift_test = (1 << 3) == 8;
+    invariant lshift_test = (8 >> 3) == 1;
+    invariant negate_test = ~0 == 0xffffffff; // bitwise ops are always on 32-bit values
+}

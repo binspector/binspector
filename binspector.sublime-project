@@ -1,0 +1,26 @@
+{
+	"folders":
+	[
+        {
+            "path": ".",
+            "name": "top",
+            "folder_exclude_patterns": ["source", "documentation", "app", "xcode", "binspector", "bfft"]
+        },
+        {
+            "path": "./binspector",
+            "name": "headers"
+        },
+        {
+            "path": "./source",
+            "name": "sources"
+        },
+        {
+            "path": "./app",
+            "name": "app"
+        },
+        {
+            "path": "./bfft",
+            "name": "templates"
+        }
+	]
+}

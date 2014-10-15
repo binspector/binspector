@@ -1,0 +1,6 @@
+.DS_Store
+binspector.sublime-workspace
+project.xcworkspace/
+xcuserdata/
+xcode/build/
+xcode/DerivedData/

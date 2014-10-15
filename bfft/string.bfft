@@ -1,0 +1,62 @@
+/******************************************************************************/
+
+struct string_t
+{
+    long_t length;
+
+    if (length != 0)
+    {
+        skip value[length];
+
+        const string = str(@value);
+
+        summary string;
+    }
+}
+
+/******************************************************************************/
+
+struct cstring_t
+{
+    char_t byte_set[terminator: 0];
+
+    const as_string = str(@byte_set);
+
+    // 1 because we're getting at least the null terminator.
+    if (sizeof(@byte_set) > 1)
+    {
+        summary as_string;
+    }
+}
+
+/******************************************************************************/
+
+struct unicode_string_t
+{
+    long_t length;
+
+    if (length != 0)
+    {
+        word_t value[length];
+
+        // TODO: Get str() working for utf16->utf8 output!
+        // Or write some utf16->utf8 utility routine
+        // summary str(@value);
+    }
+}
+
+/******************************************************************************/
+
+struct pascal_t
+{
+    char_t length;
+
+    if (length != 0)
+    {
+        char_t string[length];
+
+        summary str(@string);
+    }
+}
+
+/******************************************************************************/
