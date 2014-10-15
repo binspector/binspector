@@ -19,7 +19,7 @@ cd ..
 if [ "$BUILDMODE" == "debug" ] ; then
     CURMODE="debug"
 elif [ "$BUILDMODE" == "release" ] ; then
-    CURMODE="debug"
+    CURMODE="release"
 else
     echo "INFO : BUILDMODE unspecfied. Defaulting to debug."
 
