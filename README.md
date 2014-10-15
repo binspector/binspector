@@ -1,3 +1,5 @@
+[![Build status](https://travis-ci.org/binspector/binspector.png?branch=master)](https://travis-ci.org/binspector/binspector)
+
 # What is Binspector?
 
 Binspector and its related language are built around the idea of exposing the guts of binary formats and files so plain old humans can grok them better.
