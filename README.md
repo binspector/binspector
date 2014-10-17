@@ -9,7 +9,7 @@ Specifically there are two pieces that accomplish this:
  - A language used to construct binary format descriptions
  - The Binspector tool
 
-The language allows individuals to create formalized descriptions of binary formats. These descriptions are known as BFFTs (**b**inary **f**ile **f**ormat **t**emplate). From there any given binary file can be tested against a BFFT in order to:
+The language allows individuals to create formalized descriptions of binary formats. These descriptions are known as BFFTs (<strong>b</strong>inary <strong>f</strong>ile <strong>f</strong>ormat <strong>t</strong>emplate). From there any given binary file can be tested against a BFFT in order to:
 
 - Verify the binary file meets the requirements of the binary format
   - e.g., "Is my_photo.jpg a well-formed jpeg?"
