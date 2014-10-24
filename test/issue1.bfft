@@ -1,0 +1,12 @@
+struct foo_t
+{
+    summary "Hello";
+}
+
+struct main
+{
+    foo_t foo;
+
+    // Issue #1: Ability use the summary of a structure without summaryof
+    summary foo;
+}

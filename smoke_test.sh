@@ -32,10 +32,12 @@ if [ ! -e $BINPATH ]; then
     echo "INFO : $BINPATH not found: setting up."
 
     ./binspector/configure.sh
-    ./binspector/build.sh
 else
     echo "INFO : $BINPATH found: skipping setup."
 fi
+
+# Always run build in case the sources have been touched.
+./binspector/build.sh
 
 if [ ! -e 'samples' ]; then
     mkdir 'samples'
@@ -67,5 +69,6 @@ else
     echo "INFO : $PNGPATH found: skipping download."
 fi
 
+echo_run $BINPATH -t ./binspector/test/issue1.bfft -i ./binspector/test/empty.bin -m validate
 echo_run $BINPATH -t ./binspector/bfft/jpg.bfft -i $JPEGPATH -m validate
 echo_run $BINPATH -t ./binspector/bfft/png.bfft -i $PNGPATH -m validate
