@@ -4,7 +4,16 @@
         {
             "path": ".",
             "name": "top",
-            "folder_exclude_patterns": ["source", "documentation", "app", "xcode", "binspector", "bfft"]
+            "folder_exclude_patterns":
+            [
+                "app",
+                "bfft",
+                "binspector",
+                "documentation",
+                "source",
+                "test",
+                "xcode"
+            ]
         },
         {
             "path": "./binspector",
@@ -21,6 +30,10 @@
         {
             "path": "./bfft",
             "name": "templates"
+        },
+        {
+            "path": "./test",
+            "name": "tests"
         }
 	]
 }

@@ -587,7 +587,21 @@ try
             adobe::array_t        argument_set(eval_here<adobe::array_t>(expression));
             std::stringstream     result;
 
-            adobe::copy(argument_set, std::ostream_iterator<adobe::any_regular_t>(result));
+            // REVISIT (fbrereto) : I would like to be able to specify a serialization routien for
+            //                      inspection_branch_t at this point, so I don't have to do this
+            //                      kind of manual looping, however changes will need to go into ASL
+            //                      to make that happen, so this is a bit of a hack.
+            for (const auto& entry : argument_set)
+            {
+                if (entry.type_info() == typeid(inspection_branch_t))
+                {
+                    result << entry.cast<inspection_branch_t>()->summary_m;
+                }
+                else
+                {
+                    result << entry;
+                }
+            }
 
             parent->summary_m = result.str();
 
