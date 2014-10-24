@@ -6,9 +6,9 @@ branches:
         - master
 notifications:
   recipients:
-    - adobe-source-build@lists.sourceforge.net
+    - gxrtBk7MFiA26YqxA9PpXYxwEq6dkm@api.pushover.net
   email:
-    on_success: change
+    on_success: always
     on_failure: always
 install:
     - ./configure.sh
