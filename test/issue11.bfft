@@ -1,0 +1,395 @@
+struct cstring_t
+{
+    char_t byte_set[terminator: 0];
+
+    // 1 because we're getting at least the null terminator.
+    if (sizeof(@byte_set) > 1)
+    {
+        summary str(@byte_set);
+    }
+}
+
+struct footer_t
+{
+    word_t eoi; // end of stream marker
+
+    invariant is_eoi = eoi == 0xFFD9;
+}
+
+struct app0_marker_t
+{
+    word_t    length;
+    cstring_t identifier_raw;
+    
+    const identifier = str(@identifier_raw);
+    const data_length = length - sizeof(@length, @identifier_raw);
+
+    if (identifier == 'JFIF')
+    {
+        word_t version;
+        byte_t density_units;
+        word_t x_density;
+        word_t y_density;
+        byte_t thumbnail_width;
+        byte_t thumbnail_height;
+        
+        const thumbnail_data_size = 3 * thumbnail_width * thumbnail_height;
+
+        skip thumbnail_data[thumbnail_data_size];
+
+        summary "JFIF thumbnail: ", thumbnail_width, 'x', thumbnail_height;
+    }
+    else
+    {
+        summary "Unknown APP0 (", identifier, ")";
+
+        skip unimplemented[data_length];
+    }
+}
+
+struct ps_exif_t
+{
+    summary "Exif";
+
+    byte_t sig_leftovers; // leftover \x00 or \xff from identifier
+    tiff_t tiff;
+
+    const additional_data = length - sizeof(@length, @tiff);
+
+    skip remote_data[additional_data];
+}
+
+struct app1_marker_t
+{
+    word_t    length;
+    cstring_t identifier_raw;
+    
+    const identifier = str(@identifier_raw);
+    invis size = length - sizeof(@length, @identifier_raw);
+
+    if (identifier == 'Exif')
+    {
+        ps_exif_t exif;
+
+        summary summaryof(exif);
+    }
+    else
+    {
+		skip unused[size];
+
+        summary "Unrecognized APP1: ", identifier;
+    }
+}
+
+struct appN_marker_t
+{
+    word_t    length;
+    cstring_t identifier_raw;
+    
+    const identifier = str(@identifier_raw);
+    const data_length = length - sizeof(@length, @identifier_raw);
+
+    skip unimplemented[data_length];
+
+    summary "APPN marker: ", identifier;
+
+}
+
+struct comment_t
+{
+    word_t length;
+    const  data_length = length - sizeof(@length);
+
+    skip comment[data_length];
+
+    const comment_str = str(@comment);
+
+    summary "COM: ", comment_str;
+}
+
+struct nonapp_marker_t
+{
+    summary "Non-app marker";
+
+    word_t length;
+    const  data_length = length - sizeof(@length);
+
+    skip unimplemented[data_length];
+}
+
+struct sos_component_t
+{
+    byte_t         selector;
+    unsigned 4 big td; // DC entropy coding table destination selector
+    unsigned 4 big ta; // AC entropy coding table destination selector
+}
+
+struct sos_marker_t
+{
+    summary "Start of stream";
+
+    // JPEG spec B.2.3
+    // start of stream marker
+    word_t length;
+
+    sentry (padd(startof(@length), length))
+    {
+        byte_t count;
+
+        invariant ok_length = length == 6 + 2 * count;
+
+        if (count != 0)
+            sos_component_t component[count];
+    
+        byte_t         ss; // Start of spectral or predictor selection
+        byte_t         se; // End of spectral or predictor selection
+        unsigned 4 big ah; // Successive approximation bit position high
+        unsigned 4 big al; // Successive approximation bit position low or point transform
+    }
+}
+
+struct dri_marker_t
+{
+    summary "Restart interval";
+
+    word_t length;
+
+    invariant ok_length = length == 4;
+
+    word_t interval;
+}
+
+struct dnl_marker_t
+{
+    summary "Number of lines";
+
+    word_t length;
+
+    invariant ok_length = length == 4;
+
+    word_t count;
+}
+
+struct dht_table_t
+{
+    unsigned 4 big table_class;
+    unsigned 4 big identifier;
+
+    // It'd be nice if there was a shorter way to describe a
+    // two dimensional array. This one's a doozy in any case.
+    byte_t count[16];
+    byte_t v0[count[0]];
+    byte_t v1[count[1]];
+    byte_t v2[count[2]];
+    byte_t v3[count[3]];
+    byte_t v4[count[4]];
+    byte_t v5[count[5]];
+    byte_t v6[count[6]];
+    byte_t v7[count[7]];
+    byte_t v8[count[8]];
+    byte_t v9[count[9]];
+    byte_t v10[count[10]];
+    byte_t v11[count[11]];
+    byte_t v12[count[12]];
+    byte_t v13[count[13]];
+    byte_t v14[count[14]];
+    byte_t v15[count[15]];
+}
+
+struct dht_marker_t
+{
+    summary "Huffman tables";
+
+    word_t length;
+
+    const sentry_end = padd(startof(@length), length, -1);
+
+    sentry (padd(sentry_end, 1))
+        dht_table_t table[while: endof(@table) != sentry_end];
+}
+
+struct dqt_table_t
+{
+    unsigned 4 big precision;
+    unsigned 4 big identifier;
+
+    // sub-byte enumerations not working yet
+    // enumerate (precision) [ 0, 1 ]
+
+    if (precision == 0)
+    {
+        byte_t table[64];
+    }
+    else if (precision == 1)
+    {
+        word_t table[64];
+    }
+    else
+    {
+        die path(), ": Found unknown precision value: ", precision;
+    }
+}
+
+struct dqt_marker_t
+{
+    summary "Quantization tables";
+
+    // JPEG spec B.2.4.1
+    // quantization table specification
+
+    word_t length;
+
+    if (true)
+    {
+        // NOTE (fbrereto) : The sentry offset is the first byte *after*
+        //                   the permitted region. So we want to check
+        //                   that the data is one less than that offset,
+        //                   hence the -1 difference between sentry_end
+        //                   and the sentry expression.
+        //
+        //                   P.S. JPEG, why you gotta treat me this way?
+        const sentry_end = padd(startof(@length), length, -1);
+    
+        sentry (padd(sentry_end, 1))
+            dqt_table_t table[while: endof(@table) != sentry_end];
+    }
+    else
+    {
+        skip unused[length - sizeof(@length)];
+    }
+}
+
+struct sof_component_t
+{
+    byte_t         identifier;
+    unsigned 4 big horizontal_factor;
+    unsigned 4 big vertical_factor;
+    byte_t         qtds; // Quantization table destination selector
+}
+
+struct sof_marker_t
+{
+    summary "Start of frame";
+
+    // JPEG spec B.2.2
+    // start of frame marker
+
+    word_t length;
+
+    sentry (padd(startof(@length), length))
+    {
+        byte_t sample_precision;
+        word_t lines; // rows, height, etc.
+        word_t samples_per_line; // cols, width, etc.
+        byte_t count; // image component count
+    
+        invariant ok_length = length == 8 + 3 * count;
+
+        if (count != 0)
+            sof_component_t component[count];
+    }
+
+    const mcu_byte_size = (sample_precision / 8) * count;
+    const ecs_size = mcu_byte_size * lines * samples_per_line;
+}
+
+struct app13_marker_t
+{
+    word_t length;
+    const  data_length = length - sizeof(@length);
+
+    skip unimplemented[data_length];
+
+    summary "Photoshop IRB";
+}
+
+struct segment_t
+{
+    byte_t app_marker1;
+
+    invariant is_app_marker = app_marker1 == 0xFF;
+
+    byte_t app_marker2;
+
+    // JPEG spec B.1.1.3; This template does not handle reserved marker segments,
+    // Nor the JPEG extensions at markers 0xF0 to 0xFD
+
+    enumerate (app_marker2)
+    {
+        0xC0: { sof_marker_t    sof0; summary summaryof(sof0); }  // Baseline DCT
+        0xC1: { sof_marker_t    sof1; summary summaryof(sof1); }  // Extended sequential DCT, Huffman coding
+        0xC2: { sof_marker_t    sof2; summary summaryof(sof2); }  // Progressive DCT, Huffman coding
+        0xC3: { sof_marker_t    sof3; summary summaryof(sof3); }  // Lossless (sequential), Huffman coding
+        0xC4: { dht_marker_t    dht; summary summaryof(dht); }   // huffman tables
+        0xC5: { sof_marker_t    sof5; summary summaryof(sof5); }  // Differential sequential DCT
+        0xC6: { sof_marker_t    sof6; summary summaryof(sof6); }  // Differential progressive DCT
+        0xC7: { sof_marker_t    sof7; summary summaryof(sof7); }  // Differential lossless (sequential)
+        0xC8: { nonapp_marker_t jpg; summary summaryof(jpg); }   // Reserved for JPEG extensions
+        0xC9: { sof_marker_t    sof9; summary summaryof(sof9); }  // Extended sequential DCT, arithmetic coding
+        0xCA: { sof_marker_t    sof10; summary summaryof(sof10); } // Progressive DCT, arithmetic coding
+        0xCB: { sof_marker_t    sof11; summary summaryof(sof11); } // Lossless (sequential), arithmetic coding
+        0xCC: { nonapp_marker_t dac; summary summaryof(dac); }   // Define arithmetic coding conditioning(s)
+        0xCD: { sof_marker_t    sof13; summary summaryof(sof13); } // Differential sequential DCT
+        0xCE: { sof_marker_t    sof14; summary summaryof(sof14); } // Differential progressive DCT
+        0xCF: { sof_marker_t    sof15; summary summaryof(sof15); } // Differential lossless (sequential)
+        0xD0: { nonapp_marker_t rst0; summary summaryof(rst0); }  // Restart with modulo 8 count "0"
+        0xD1: { nonapp_marker_t rst1; summary summaryof(rst1); }  // Restart with modulo 8 count "1"
+        0xD2: { nonapp_marker_t rst2; summary summaryof(rst2); }  // Restart with modulo 8 count "2"
+        0xD3: { nonapp_marker_t rst3; summary summaryof(rst3); }  // Restart with modulo 8 count "3"
+        0xD4: { nonapp_marker_t rst4; summary summaryof(rst4); }  // Restart with modulo 8 count "4"
+        0xD5: { nonapp_marker_t rst5; summary summaryof(rst5); }  // Restart with modulo 8 count "5"
+        0xD6: { nonapp_marker_t rst6; summary summaryof(rst6); }  // Restart with modulo 8 count "6"
+        0xD7: { nonapp_marker_t rst7; summary summaryof(rst7); }  // Restart with modulo 8 count "7"
+        0xD8: { const soi_marker = true; summary 'Start of image'; } // Start of image
+        0xD9: { const eoi_marker = true; summary 'End of image'; } // End of image
+        0xDA: { sos_marker_t    sos; summary summaryof(sos); }   // Start of scan
+        0xDB: { dqt_marker_t    dqt; summary summaryof(dqt); }   // Define quantization table(s)
+        0xDC: { dnl_marker_t    dnl; summary summaryof(dnl); }   // Define number of lines
+        0xDD: { dri_marker_t    dri; summary summaryof(dri); }   // Define restart interval
+        0xDE: { nonapp_marker_t dhp; summary summaryof(dhp); }   // Define hierarchical progression
+        0xDF: { nonapp_marker_t exp; summary summaryof(exp); }   // Expand reference component(s)
+        0xE0: { app0_marker_t   app0; summary summaryof(app0); }  // Application segment 0
+        0xE1: { app1_marker_t   app1; summary summaryof(app1); }  // Application segment 1
+        0xE2: { appN_marker_t   app2; summary summaryof(app2); }  // Application segment 2
+        0xE3: { appN_marker_t   app3; summary summaryof(app3); }  // Application segment 3
+        0xE4: { appN_marker_t   app4; summary summaryof(app4); }  // Application segment 4
+        0xE5: { appN_marker_t   app5; summary summaryof(app5); }  // Application segment 5
+        0xE6: { appN_marker_t   app6; summary summaryof(app6); }  // Application segment 6
+        0xE7: { appN_marker_t   app7; summary summaryof(app7); }  // Application segment 7
+        0xE8: { appN_marker_t   app8; summary summaryof(app8); }  // Application segment 8
+        0xE9: { appN_marker_t   app9; summary summaryof(app9); }  // Application segment 9
+        0xEA: { appN_marker_t   app10; summary summaryof(app10); } // Application segment 10
+        0xEB: { appN_marker_t   app11; summary summaryof(app11); } // Application segment 11
+        0xEC: { appN_marker_t   app12; summary summaryof(app12); } // Application segment 12
+        0xED: { app13_marker_t  app13; summary summaryof(app13); } // Application segment 13; Photoshop stores IRBs here
+        0xEE: { appN_marker_t   app14; summary summaryof(app14); } // Application segment 14
+        0xEF: { appN_marker_t   app15; summary summaryof(app15); } // Application segment 15
+        0xFE: { comment_t       comment; summary summaryof(comment); } // JPEG Comment Extension
+        default: notify "WARNING: unhandled marker segment: ", app_marker2;
+    }
+}
+
+struct main
+{
+    typedef unsigned 8 big  bool_t;
+    typedef unsigned 8 big  char_t;
+    typedef unsigned 8 big  byte_t;
+    typedef unsigned 16 big word_t;
+    typedef unsigned 32 big long_t;
+    typedef float    32 big float_t;
+    typedef float    64 big double_t;
+
+    // Issue #11: Using a delimiter to mark the end of the segment_t (structure) array.
+    segment_t segment[delimiter: 0xFFDA];
+
+    word_t sos_marker;
+
+    invariant ok_sos_marker = sos_marker == 0xFFDA;
+
+    sos_marker_t start_of_stream;
+
+    // die ("End of segments."); // Enable if all you're interested in are the segments.
+
+    byte_t    image_stream[delimiter: 0xFFD9]; // size 16 for window is implicit in data size; delimiter is NOT included in this value
+    footer_t  footer;
+}
