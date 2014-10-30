@@ -788,6 +788,46 @@ try
                                 return false;
                         }
                     }
+                    else if (field_size_type == field_size_terminator_k)
+                    {
+                        throw std::runtime_error("Structure size expression: terminator not allowed");
+                    }
+                    else if (field_size_type == field_size_delimiter_k)
+                    {
+                        boost::uint64_t delimiter(eval_here<boost::uint64_t>(field_size_expression));
+                        boost::uint64_t delimiter_byte_count(std::max<std::size_t>(1, highest_byte_for(delimiter)));
+
+                        while (true)
+                        {
+                            boost::uint64_t delimiter_peek(0);
+
+                            {
+                            restore_point_t      restore_point(input_m);
+                            rawbytes_t           raw(input_m.read(delimiter_byte_count));
+                            adobe::any_regular_t peeked_any(evaluate(raw,
+                                                                     delimiter_byte_count * 8,
+                                                                     atom_unsigned_k,
+                                                                     true));
+                            delimiter_peek = static_cast<boost::uint64_t>(peeked_any.cast<double>());
+                            }
+
+                            if (delimiter_peek == delimiter)
+                                break;
+
+                            inspection_branch_t array_element_branch(new_branch(sub_branch));
+                            forest_node_t&      array_element_data(*array_element_branch);
+    
+                            array_element_data.set_flag(is_array_element_k);
+                            array_element_data.cardinal_m = branch_data.cardinal_m++;
+    
+                            if (jump_into_structure(struct_name, array_element_branch) == false)
+                                return false;
+                        }
+                    }
+                    else
+                    {
+                        throw std::runtime_error("Unknown structure size expression type");
+                    }
     
                     // One final update to the root's end offset should does the trick
                     branch_data.end_offset_m = input_m.pos() - inspection_byte_k;
@@ -962,6 +1002,10 @@ try
                             array_element_data.cardinal_m = branch_data.cardinal_m++;
                             array_element_data.location_m = make_location(branch_data.bit_count_m);
                         }
+                    }
+                    else
+                    {
+                        throw std::runtime_error("Unknown atom size expression type");
                     }
     
                     // One final update to the root's end offset should does the trick
