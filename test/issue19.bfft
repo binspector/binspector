@@ -1,0 +1,7 @@
+struct main
+{
+    // Issue #19 : Signals should be declarable in the same structure as their associated slot.
+    slot done = false;
+
+    signal done = true;
+}
