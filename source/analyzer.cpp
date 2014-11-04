@@ -168,8 +168,14 @@ void binspector_analyzer_t::add_named_field(adobe::name_t              name,
         return;
 
     structure_type& current_structure(*current_structure_m);
+    adobe::name_t   type(value_for<adobe::name_t>(parameters, key_field_type));
 
-    check_duplicate_field_name(current_structure, name);
+    // Signals are declarations that don't produce a field, so the fact there
+    // could be a field with the same name as the signal is ok. (We may want to
+    // consider doing something similar for invariant names, too, to relax the
+    // restriction that their names be unique.)
+    if (type != value_field_type_signal)
+        check_duplicate_field_name(current_structure, name);
 
     current_structure.push_back(adobe::any_regular_t(parameters));
 }
