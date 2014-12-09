@@ -14,8 +14,6 @@ echo_run ()
 
 echo_run cd `dirname $0`
 
-cd ..
-
 if [ "$BUILDMODE" == "debug" ] ; then
     CURMODE="debug"
 elif [ "$BUILDMODE" == "release" ] ; then
@@ -26,46 +24,19 @@ else
     CURMODE="debug"
 fi
 
-BINPATH="./bin/$CURMODE/binspector"
+BINPATH="../bin/$CURMODE/binspector"
+BFFTPATH="./bfft"
+SAMPLEPATH="../samples"
 
-if [ ! -e $BINPATH ]; then
-    echo "INFO : $BINPATH not found: setting up."
+./configure.sh
+./build.sh
 
-    ./binspector/configure.sh
-    ./binspector/build.sh
-else
-    echo "INFO : $BINPATH found: skipping setup."
+# We have a repository for sample files; grab that in anticipation for the
+# validation pass below.
+if [ ! -e $SAMPLEPATH ]; then
+    echo_run git clone --depth=1 https://github.com/binspector/samples.git $SAMPLEPATH
 fi
 
-if [ ! -e 'samples' ]; then
-    mkdir 'samples'
-fi
-
-JPEGPATH='samples/sample.jpg'
-
-if [ ! -e $JPEGPATH ]; then
-    echo "INFO : $JPEGPATH not found; downloading."
-
-    # Image use license: http://creativecommons.org/licenses/by-sa/3.0/
-    SAMPLE_JPEG='http://upload.wikimedia.org/wikipedia/commons/b/b4/JPEG_example_JPG_RIP_100.jpg'
-
-    echo_run curl -L "$SAMPLE_JPEG" -o $JPEGPATH
-else
-    echo "INFO : $JPEGPATH found: skipping download."
-fi
-
-PNGPATH='samples/sample.png'
-
-if [ ! -e $PNGPATH ]; then
-    echo "INFO : $PNGPATH not found; downloading."
-
-    # Image use license: http://creativecommons.org/licenses/by-sa/3.0/
-    SAMPLE_PNG='http://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png'
-
-    echo_run curl -L "$SAMPLE_PNG" -o $PNGPATH
-else
-    echo "INFO : $PNGPATH found: skipping download."
-fi
-
-echo_run $BINPATH -t ./binspector/bfft/jpg.bfft -i $JPEGPATH -m validate
-echo_run $BINPATH -t ./binspector/bfft/png.bfft -i $PNGPATH -m validate
+echo_run $BINPATH -t $BFFTPATH/jpg.bfft -i $SAMPLEPATH/sample.jpg -m validate
+echo_run $BINPATH -t $BFFTPATH/png.bfft -i $SAMPLEPATH/sample.png -m validate
+echo_run $BINPATH -t $BFFTPATH/bmp.bfft -i $SAMPLEPATH/sample.bmp -m validate

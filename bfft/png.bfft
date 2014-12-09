@@ -1,15 +1,13 @@
 struct header_t
 {
-    unsigned 8 big signature[8];
-
-    invariant is_high_bit_ok  = signature[0] == 137;
-    invariant is_p            = signature[1] == fcc('P');
-    invariant is_n            = signature[2] == fcc('N');
-    invariant is_g            = signature[3] == fcc('G');
-    invariant is_dos_le1      = signature[4] == 0x0D;
-    invariant is_dos_le2      = signature[5] == 0x0A;
-    invariant is_dos_eof_char = signature[6] == 0x1A;
-    invariant is_unix_le      = signature[7] == 0x0A;
+    unsigned 8 big signature_0 <== 137;
+    unsigned 8 big signature_1 <== fcc('P');
+    unsigned 8 big signature_2 <== fcc('N');
+    unsigned 8 big signature_3 <== fcc('G');
+    unsigned 8 big signature_4 <== 0x0D;
+    unsigned 8 big signature_5 <== 0x0A;
+    unsigned 8 big signature_6 <== 0x1A;
+    unsigned 8 big signature_7 <== 0x0A;
 }
 
 struct ihdr_t

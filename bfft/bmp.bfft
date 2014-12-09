@@ -1,13 +1,67 @@
 struct header_t
 {
-    unsigned 8  big    magic_number[2];
+    unsigned 8  big    magic_1 <== fcc('B');
+    unsigned 8  big    magic_2 <== fcc('M');
     unsigned 32 little file_size;
     unsigned 16 little creator1;
     unsigned 16 little creator2;
     unsigned 32 little bmp_offset;
+}
 
-    invariant ok_B = magic_number[0] == 66; // 'B'
-    invariant ok_M = magic_number[1] == 77; // 'M';
+struct core_header_t
+{
+    unsigned 16 little width;
+    unsigned 16 little height;
+    unsigned 16 little color_plane_count <== 1;
+    unsigned 16 little bpp;
+}
+
+struct info_header_t
+{
+    unsigned 32 little width;
+    unsigned 32 little height;
+    unsigned 16 little color_plane_count <== 1;
+    unsigned 16 little bpp;
+    unsigned 32 little compression_method;
+    unsigned 32 little image_size;
+    unsigned 32 little h_res;
+    unsigned 32 little v_res;
+    unsigned 32 little color_palette_count;
+    unsigned 32 little important_color_count; // generally ignored
+}
+
+struct fixed2dot30_t
+{
+    unsigned 2  little integer;
+    unsigned 30 little fraction;
+}
+
+struct ciexyz_t
+{
+    fixed2dot30_t x;
+    fixed2dot30_t y;
+    fixed2dot30_t z;
+}
+
+struct ciexyz_triple_t
+{
+    ciexyz_t red;
+    ciexyz_t green;
+    ciexyz_t blue;
+}
+
+struct info_header_v4_t
+{
+    info_header_t      super;
+    unsigned 32 big    red_bitmask;
+    unsigned 32 big    green_bitmask;
+    unsigned 32 big    blue_bitmask;
+    unsigned 32 big    alpha_bitmask;
+    unsigned 32 little color_space;
+    ciexyz_triple_t    endpoints;
+    unsigned 32 big    red_gamma;
+    unsigned 32 big    green_gamma;
+    unsigned 32 big    blue_gamma;
 }
 
 struct dib_t
@@ -16,38 +70,26 @@ struct dib_t
 
     enumerate (header_size)
     {
-        12 :
-        {
-            unsigned 16 little width;
-            unsigned 16 little height;
-        }
-        40 :
-        {
-            unsigned 32 little width;
-            unsigned 32 little height;
-        }
-    }
-
-    unsigned 16 little color_plane_count;
-    unsigned 16 little bpp;
-
-    if (header_size == 40)
-    {
-        unsigned 32 little compression_method;
-        unsigned 32 little image_size;
-        unsigned 32 little h_res;
-        unsigned 32 little v_res;
-        unsigned 32 little color_palette_count;
-        unsigned 32 little important_color_count; // generally ignored
+        12  : core_header_t    header;
+        40  : info_header_t    header;
+        108 : info_header_v4_t header;
     }
 }
 
 struct pixel_row_t
 {
-    const pixel_size   = dib_header.width * (dib_header.bpp / 8);
-    const padding_size = dib_header.width % 4;
+    const pixel_size   = dib.header.width * (dib.header.bpp / 8);
+    const padding_size = dib.header.width % 4;
 
     unsigned 8 big pixels[pixel_size];
+
+    enumerate (padding_size)
+    {
+        0 : { }
+        1 : unsigned 8 big padding[1];
+        2 : unsigned 8 big padding[2];
+        3 : unsigned 8 big padding[3];
+    }
 
     if (padding_size != 0)
         skip padding[padding_size];
@@ -56,6 +98,6 @@ struct pixel_row_t
 struct main
 {
     header_t    header;
-    dib_t       dib_header;
-    pixel_row_t pixel_row_set[dib_header.height] @ header.bmp_offset;
+    dib_t       dib;
+    pixel_row_t pixel_row_set[dib.header.height] @ header.bmp_offset;
 }

@@ -851,6 +851,34 @@ try
                 else // singleton
                 {
                     branch_data.location_m = make_location(branch_data.bit_count_m);
+
+                    const adobe::array_t& atom_invariant_expression(value_for<adobe::array_t>(field, key_field_atom_invariant_expression));
+
+                    if (!atom_invariant_expression.empty())
+                    {
+                        double atom_invariant(eval_here<double>(atom_invariant_expression));
+                        double value(0);
+
+                        {
+                        restore_point_t restore_point(input_m);
+
+                        value = finalize_lookup<double>(forest_m->begin(), sub_branch, input_m, true);
+                        }
+
+                        if (atom_invariant != value)
+                        {
+                            std::string error;
+
+                            error += build_path(sub_branch)
+                                  +  " invariant (expected: "
+                                  +  boost::lexical_cast<std::string>(atom_invariant)
+                                  +  ", found: "
+                                  +  boost::lexical_cast<std::string>(value)
+                                  +  ")";
+
+                            throw std::runtime_error(error);
+                        }
+                    }
                 }
             }
             else

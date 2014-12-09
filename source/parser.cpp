@@ -939,11 +939,13 @@ bool binspector_parser_t::is_field()
     adobe::array_t field_size_expression;
     field_size_t   field_size_type(field_size_none_k);
     adobe::array_t offset_expression;
+    adobe::array_t atom_invariant_expression;
     adobe::array_t callback_expression;
     bool           shuffleable(false);
 
     is_field_size(field_size_type, field_size_expression, shuffleable); // optional
     is_offset(offset_expression); // optional
+    is_atom_invariant(atom_invariant_expression); // optional
 
     try
     {
@@ -954,6 +956,7 @@ bool binspector_parser_t::is_field()
         parameters[key_field_size_type].assign(field_size_type);
         parameters[key_field_size_expression].assign(field_size_expression);
         parameters[key_field_offset_expression].assign(offset_expression);
+        parameters[key_field_atom_invariant_expression].assign(atom_invariant_expression);
         parameters[key_field_shuffle].assign(shuffleable);
 
         // add the field to the current structure description
@@ -1046,6 +1049,18 @@ bool binspector_parser_t::is_offset(adobe::array_t& offset_expression)
         return false;
 
     require_expression(offset_expression);
+
+    return true;
+}
+
+/**************************************************************************************************/
+
+bool binspector_parser_t::is_atom_invariant(adobe::array_t& atom_invariant_expression)
+{
+    if (!is_token(adobe::is_k))
+        return false;
+
+    require_expression(atom_invariant_expression);
 
     return true;
 }

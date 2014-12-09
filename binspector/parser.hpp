@@ -60,15 +60,11 @@
     field_size         = '[' { [ "while" | "terminator" | "delimiter" ] ':' } expression ']' { "shuffle" }
     slot               = "slot" identifier '=' expression
     signal             = "signal" identifier '=' expression
-    field              = field_type identifier { field_size } { offset }
+    field              = field_type identifier { field_size } { offset } { atom_invariant }
+    atom_invariant     = '<==' expression
     offset             = '@' expression
     pp_statement       = pp_include
     pp_include         = "include" string
-*/
-/*
-    TODO:
-        - Add the ability to specify a field size in a typedef, a la:
-            typedef = "typedef" field_type { field_size } identifier;
 */
 /**************************************************************************************************/
 
@@ -137,6 +133,7 @@ private:
     bool is_slot();
     bool is_signal();
     bool is_field();
+    bool is_atom_invariant(adobe::array_t& atom_invariant_expression);
     bool is_offset(adobe::array_t& offset_expression);
     bool is_summary();
     bool is_die();

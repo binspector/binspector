@@ -23,6 +23,7 @@ CONSTANT_KEY(field_if_expression);
 CONSTANT_KEY(field_name);
 CONSTANT_KEY(field_assign_expression);
 CONSTANT_KEY(field_offset_expression);
+CONSTANT_KEY(field_atom_invariant_expression);
 CONSTANT_KEY(field_size_expression);
 CONSTANT_KEY(field_size_type);
 CONSTANT_KEY(field_shuffle);
