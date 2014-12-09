@@ -32,25 +32,13 @@
 class binspector_analyzer_t
 {
 public:
-    typedef adobe::array_t                                                                    structure_type;
-    typedef adobe::closed_hash_map<adobe::name_t, structure_type>                             structure_map_t;
-    typedef adobe::closed_hash_map<adobe::name_t, adobe::copy_on_write<adobe::dictionary_t> > typedef_map_t;
+    typedef adobe::copy_on_write<adobe::dictionary_t>               cow_dictionary_t;
+    typedef adobe::closed_hash_map<adobe::name_t, cow_dictionary_t> typedef_map_t;
 
     explicit binspector_analyzer_t(std::istream& binary_file,
+                                   const ast_t&  ast,
                                    std::ostream& output,
                                    std::ostream& error);
-
-    // if the structure has not been previously specified it will be created
-    void set_current_structure(adobe::name_t structure_name);
-
-    // these operations take place on the last set_current_structure structure
-    void add_named_field(adobe::name_t              name,
-                         const adobe::dictionary_t& parameters);
-
-    void add_unnamed_field(const adobe::dictionary_t& parameters);
-
-    void add_typedef(adobe::name_t              typedef_name,
-                     const adobe::dictionary_t& typedef_parameters);
 
     void set_quiet(bool quiet);
 
@@ -60,15 +48,11 @@ public:
     auto_forest_t forest()
         { return forest_m; }
 
-    const structure_map_t& structure_map() const
-        { return structure_map_m; }
-
 private:
     // inspection related
     inspection_branch_t   new_branch(inspection_branch_t with_parent);
     bool                  analyze_with_structure(const structure_type& structure,
                                                  inspection_branch_t   parent);
-    const structure_type& structure_for(adobe::name_t structure_name);
 
     inspection_position_t make_location(boost::uint64_t bit_count)
     {
@@ -106,8 +90,7 @@ private:
     bitreader_t           input_m;
     std::ostream&         output_m;
     std::ostream&         error_m;
-    structure_map_t       structure_map_m;
-    structure_type*       current_structure_m;
+    const ast_t&          ast_m;
     inspection_branch_t   current_leaf_m;
     typedef_map_t         current_typedef_map_m;
     adobe::any_regular_t  current_enumerated_value_m;

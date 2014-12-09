@@ -9,22 +9,16 @@
 #define BINSPECTOR_AST_HPP
 
 // stdc++
-#include <iostream>
-#include <map>
 
 // boost
-#include <boost/cstdint.hpp>
-#include <boost/function.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 // asl
 #include <adobe/array.hpp>
-#include <adobe/copy_on_write.hpp>
 #include <adobe/dictionary.hpp>
-#include <adobe/forest.hpp>
 
 // application
-#include <binspector/bitreader.hpp>
-#include <binspector/common.hpp>
 
 /**************************************************************************************************/
 
@@ -36,6 +30,8 @@ typedef adobe::closed_hash_map<adobe::name_t, structure_type> structure_map_t;
 class ast_t
 {
 public:
+    ast_t();
+
     // if the structure has not been previously specified it will be created
     void set_current_structure(adobe::name_t structure_name);
 
@@ -48,24 +44,21 @@ public:
     void add_typedef(adobe::name_t              typedef_name,
                      const adobe::dictionary_t& typedef_parameters);
 
-    void set_quiet(bool quiet);
+    const structure_type& structure_for(adobe::name_t structure_name) const;
 
-    structure_map_t& structure_map() const
-        { return structure_map_m; }
-
-    bitreader_t           input_m;
-    std::ostream&         output_m;
-    std::ostream&         error_m;
-    structure_map_t       structure_map_m;
-    structure_type*       current_structure_m;
-    inspection_branch_t   current_leaf_m;
-    typedef_map_t         current_typedef_map_m;
-    adobe::any_regular_t  current_enumerated_value_m;
-    adobe::array_t        current_enumerated_option_set_m;
-    bool                  current_enumerated_found_m;
-    bitreader_t::pos_t    current_sentry_m;
-    std::string           current_sentry_set_path_m;
+private:
+    structure_map_t structure_map_m;
+    structure_type* current_structure_m;
 };
+
+/**************************************************************************************************/
+
+typedef std::vector<boost::filesystem::path> path_set;
+
+/**************************************************************************************************/
+
+ast_t make_ast(const boost::filesystem::path& template_path,
+               path_set                       include_path_set);
 
 /**************************************************************************************************/
 // BINSPECTOR_AST_HPP

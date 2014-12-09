@@ -19,16 +19,10 @@
 
 // application
 #include <binspector/analyzer.hpp>
-#include <binspector/dot.hpp>
 #include <binspector/fuzzer.hpp>
 #include <binspector/genfuzz.hpp>
 #include <binspector/html_dump.hpp>
 #include <binspector/interface.hpp>
-#include <binspector/parser.hpp>
-
-/**************************************************************************************************/
-
-typedef std::vector<boost::filesystem::path> path_set;
 
 /**************************************************************************************************/
 
@@ -63,15 +57,14 @@ try
       html: \tformatted HTML output of entire analyzed structure (to stdout)\n\
   validate: \tvalidation of binary file given the template. Only outputs notifications and errors (to stdout), then exits\n\
       fuzz: \tintelligent document fuzzing engine (multi-file output)\n\
-   genfuzz: \texperimental fuzzy document auto-generation\n\
-       dot: \tgenerate template file dot graph for visualization")
+   genfuzz: \texperimental fuzzy document auto-generation\n")
         ("include,I",
             boost::program_options::value<path_set>(&include_path_set)
                 ->composing(),
             "Specify additional include paths during template file parsing -- currently unimplemented")
         ("output-directory,o",
             boost::program_options::value<boost::filesystem::path>(&output_path),
-            "Specify directory for results (fuzz and dot output modes only)")
+            "Specify directory for results ([gen]fuzz output modes only)")
         ("path,p",
             boost::program_options::value<std::string>(&dump_path),
             "With -m text, only dumps the specified path")
@@ -81,7 +74,7 @@ try
         ("starting-struct,s",
             boost::program_options::value<std::string>(&starting_struct)
                 ->default_value("main"),
-            "Specify struct to use as root for analysis and -m dot")
+            "Specify struct to use as root for analysis")
         ;
 
     boost::program_options::variables_map var_map;
@@ -113,29 +106,8 @@ try
         return 1;
     }
 
-    // Open the template file, if we can.
-    if (!exists(template_path))
-    {
-        std::string error("Template file ");
-
-        // REVISIT (fbrereto): performance on these concats
-        if (template_path.empty())
-            error += "unspecified";
-        else
-            error += "'"
-                  + template_path.string()
-                  + "' could not be located or does not exist.";
-
-        throw std::runtime_error(error);
-    }
-
-    boost::filesystem::ifstream template_description(template_path);
-
-    if (!template_description)
-        throw std::runtime_error("Could not open template file");
-
     // Open the binary file, if we can.
-    if (!exists(binary_path) && output_mode != "dot")
+    if (!exists(binary_path))
     {
         std::string error("Binary file ");
 
@@ -152,7 +124,7 @@ try
 
     boost::filesystem::ifstream binary(binary_path, std::ios_base::binary);
 
-    if (!binary && output_mode != "dot")
+    if (!binary)
         throw std::runtime_error("Could not open binary input file");
 
     // Set up output and error streams
@@ -171,31 +143,10 @@ try
     // kick up the analyzer in preparation for template parsing
     // REVISIT (fbrereto) : consider moving the pass of the binary
     //                      stream to analyze_binary
-    binspector_analyzer_t analyzer(binary, sout, serr);
+    ast_t                 ast(make_ast(template_path, std::move(include_path_set)));
+    binspector_analyzer_t analyzer(binary, ast, sout, serr);
 
     analyzer.set_quiet(quiet || output_mode == "fuzz" || output_mode == "genfuzz");
-
-    try
-    {
-        adobe::line_position_t::getline_proc_t getline(new adobe::line_position_t::getline_proc_impl_t(boost::bind(&get_input_line, boost::ref(template_description), _2)));
-
-        include_path_set.insert(include_path_set.begin(), template_path.parent_path());
-
-        binspector_parser_t(template_description,
-                            adobe::line_position_t(adobe::name_t(template_path.string().c_str()), getline),
-                            include_path_set,
-                            boost::bind(&binspector_analyzer_t::set_current_structure, boost::ref(analyzer), _1),
-                            boost::bind(&binspector_analyzer_t::add_named_field, boost::ref(analyzer), _1, _2),
-                            boost::bind(&binspector_analyzer_t::add_unnamed_field, boost::ref(analyzer), _1),
-                            boost::bind(&binspector_analyzer_t::add_typedef, boost::ref(analyzer), _1, _2)).parse();
-    }
-    catch (const adobe::stream_error_t& error)
-    {
-        throw std::runtime_error(adobe::format_stream_error(template_description, error));
-    }
-
-    // once the parse is done we don't need the main template file anymore.
-    template_description.close();
 
     // Do the actual analysis, set the return result so we can track errors therein
     int result(analyzer.analyze_binary(starting_struct) == false);
@@ -260,14 +211,6 @@ try
         binary.close();
 
         genfuzz(*forest, output_path);
-    }
-    else if (output_mode == "dot")
-    {
-        // at this point the source binary isn't needed for fuzzing
-        // so we can free it up.
-        binary.close();
-
-        dot_graph(analyzer.structure_map(), starting_struct, output_path);
     }
     else
     {

@@ -43,37 +43,6 @@ const T& value_for(const adobe::dictionary_t& dict, adobe::name_t key, const T& 
 
 /**************************************************************************************************/
 
-void throw_duplicate_field_name(adobe::name_t name)
-{
-    throw std::runtime_error(adobe::make_string("Duplicate field name '",
-                                                name.c_str(),
-                                                "'"));
-}
-
-bool has_field_named(const adobe::array_t& structure,
-                     adobe::name_t         field)
-{
-    for (adobe::array_t::const_iterator iter(structure.begin()), last(structure.end()); iter != last; ++iter)
-    {
-        const adobe::dictionary_t&          cur_field(iter->cast<adobe::dictionary_t>());
-        adobe::dictionary_t::const_iterator field_name(cur_field.find(key_field_name));
-
-        if (field_name != cur_field.end() &&
-            field_name->second.cast<adobe::name_t>() == field)
-            return true;
-    }
-
-    return false;
-}
-
-void check_duplicate_field_name(const binspector_analyzer_t::structure_type& current_structure, adobe::name_t name)
-{
-    if (has_field_named(current_structure, name))
-        throw_duplicate_field_name(name);
-}
-
-/**************************************************************************************************/
-
 inline void transfer_field(adobe::dictionary_t&       dst,
                            const adobe::dictionary_t& src,
                            adobe::name_t              key)
@@ -139,8 +108,14 @@ std::size_t highest_byte_for(boost::uint64_t value)
 #endif
 /**************************************************************************************************/
 
-ast_t::ast_t() :
-    current_structure_m(nullptr),
+binspector_analyzer_t::binspector_analyzer_t(std::istream& binary_file,
+                                             const ast_t&  ast,
+                                             std::ostream& output,
+                                             std::ostream& error) :
+    input_m(binary_file),
+    output_m(output),
+    error_m(error),
+    ast_m(ast),
     current_sentry_m(invalid_position_k),
     forest_m(new inspection_forest_t),
     eof_signalled_m(false)
@@ -149,60 +124,10 @@ ast_t::ast_t() :
 
 /**************************************************************************************************/
 
-void ast_t::set_current_structure(adobe::name_t structure_name)
-{
-    current_structure_m = &structure_map_m[structure_name];
-}
-
-/**************************************************************************************************/
-
-void ast_t::add_named_field(adobe::name_t              name,
-                            const adobe::dictionary_t& parameters)
-{
-    if (current_structure_m == 0)
-        return;
-
-    structure_type& current_structure(*current_structure_m);
-
-    check_duplicate_field_name(current_structure, name);
-
-    current_structure.push_back(adobe::any_regular_t(parameters));
-}
-
-/**************************************************************************************************/
-
-void ast_t::add_unnamed_field(const adobe::dictionary_t& parameters)
-{
-    if (current_structure_m == 0)
-        return;
-
-    structure_type& current_structure(*current_structure_m);
-
-    current_structure.push_back(adobe::any_regular_t(parameters));
-}
-
-/**************************************************************************************************/
-
-void ast_t::add_typedef(adobe::name_t              /*typedef_name*/,
-                                        const adobe::dictionary_t& typedef_parameters)
-{
-    if (current_structure_m == 0)
-        return;
-
-    structure_type& current_structure(*current_structure_m);
-
-    // we'll need some kind of check_duplicate_type_name
-    // check_duplicate_field_name(current_structure, typedef_name);
-
-    current_structure.push_back(adobe::any_regular_t(typedef_parameters));
-}
-
-/**************************************************************************************************/
-
 bool binspector_analyzer_t::jump_into_structure(adobe::name_t       structure_name,
                                                 inspection_branch_t parent)
 {
-    bool result = analyze_with_structure(structure_for(structure_name), parent);
+    bool result = analyze_with_structure(ast_m.structure_for(structure_name), parent);
 
 #if 0
     if (!adobe::has_children(parent))
@@ -1001,18 +926,6 @@ catch (const std::exception& error)
     error_m << "in file: " << last_filename_m << ":" << last_line_number_m << '\n';
 
     return false;
-}
-
-/**************************************************************************************************/
-
-const binspector_analyzer_t::structure_type& binspector_analyzer_t::structure_for(adobe::name_t structure_name)
-{
-    structure_map_t::const_iterator structure(structure_map_m.find(structure_name));
-
-    if (structure == structure_map_m.end())
-        throw std::runtime_error(adobe::make_string("Could not find structure '", structure_name.c_str(), "'"));
-
-    return structure->second;
 }
 
 /**************************************************************************************************/
