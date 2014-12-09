@@ -29,12 +29,14 @@
 
 /**************************************************************************************************/
 
+typedef adobe::copy_on_write<adobe::dictionary_t>               cow_dictionary_t;
+typedef adobe::closed_hash_map<adobe::name_t, cow_dictionary_t> typedef_map_t;
+
+/**************************************************************************************************/
+
 class binspector_analyzer_t
 {
 public:
-    typedef adobe::copy_on_write<adobe::dictionary_t>               cow_dictionary_t;
-    typedef adobe::closed_hash_map<adobe::name_t, cow_dictionary_t> typedef_map_t;
-
     explicit binspector_analyzer_t(std::istream& binary_file,
                                    const ast_t&  ast,
                                    std::ostream& output,
@@ -110,8 +112,31 @@ private:
 
 /**************************************************************************************************/
 
-adobe::dictionary_t typedef_lookup(const binspector_analyzer_t::typedef_map_t& typedef_map,
-                                   const adobe::dictionary_t&                  src_field);
+template <typename T>
+const T& value_for(const adobe::dictionary_t& dict, adobe::name_t key)
+{
+    adobe::dictionary_t::const_iterator found(dict.find(key));
+
+    if (found == dict.end())
+        throw std::runtime_error(adobe::make_string("Key ", key.c_str(), " not found"));
+
+    return found->second.cast<T>();
+}
+
+/**************************************************************************************************/
+
+template <typename T>
+const T& value_for(const adobe::dictionary_t& dict, adobe::name_t key, const T& default_value)
+{
+    adobe::dictionary_t::const_iterator found(dict.find(key));
+
+    return found == dict.end() ? default_value : found->second.cast<T>();
+}
+
+/**************************************************************************************************/
+
+adobe::dictionary_t typedef_lookup(const typedef_map_t&       typedef_map,
+                                   const adobe::dictionary_t& src_field);
 
 /**************************************************************************************************/
 // BINSPECTOR_ANALYZER_HPP

@@ -12,11 +12,11 @@
 #include <boost/filesystem.hpp>
 
 // application
-#include <binspector/forest.hpp>
+#include <binspector/ast.hpp>
 
 /**************************************************************************************************/
 
-void genfuzz(const inspection_forest_t&     forest,
+void genfuzz(const ast_t&                   ast,
              const boost::filesystem::path& output_root);
 
 /**************************************************************************************************/

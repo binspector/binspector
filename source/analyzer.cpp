@@ -20,29 +20,6 @@ namespace {
 
 /**************************************************************************************************/
 
-template <typename T>
-const T& value_for(const adobe::dictionary_t& dict, adobe::name_t key)
-{
-    adobe::dictionary_t::const_iterator found(dict.find(key));
-
-    if (found == dict.end())
-        throw std::runtime_error(adobe::make_string("Key ", key.c_str(), " not found"));
-
-    return found->second.cast<T>();
-}
-
-/**************************************************************************************************/
-
-template <typename T>
-const T& value_for(const adobe::dictionary_t& dict, adobe::name_t key, const T& default_value)
-{
-    adobe::dictionary_t::const_iterator found(dict.find(key));
-
-    return found == dict.end() ? default_value : found->second.cast<T>();
-}
-
-/**************************************************************************************************/
-
 inline void transfer_field(adobe::dictionary_t&       dst,
                            const adobe::dictionary_t& src,
                            adobe::name_t              key)
@@ -248,8 +225,6 @@ bool binspector_analyzer_t::analyze_with_structure(const structure_type& structu
                                                    inspection_branch_t   parent)
 try
 {
-    static const adobe::array_t empty_array_k;
-
     temp_assignment<inspection_branch_t> node_stack(current_leaf_m, parent);
     save_restore<typedef_map_t>          typedef_map_stack(current_typedef_map_m);
     bool                                 last_conditional_value(false);
@@ -930,12 +905,12 @@ catch (const std::exception& error)
 
 /**************************************************************************************************/
 
-adobe::dictionary_t typedef_lookup(const binspector_analyzer_t::typedef_map_t& typedef_map,
-                                   const adobe::dictionary_t&                  src_field)
+adobe::dictionary_t typedef_lookup(const typedef_map_t&       typedef_map,
+                                   const adobe::dictionary_t& src_field)
 {
-    adobe::name_t                                        type(value_for<adobe::name_t>(src_field, key_named_type_name));
-    binspector_analyzer_t::typedef_map_t::const_iterator found(typedef_map.find(type));
-    adobe::dictionary_t                                  result(src_field);
+    adobe::name_t                 type(value_for<adobe::name_t>(src_field, key_named_type_name));
+    typedef_map_t::const_iterator found(typedef_map.find(type));
+    adobe::dictionary_t           result(src_field);
 
     if (found == typedef_map.end())
     {

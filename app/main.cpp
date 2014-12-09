@@ -107,7 +107,7 @@ try
     }
 
     // Open the binary file, if we can.
-    if (!exists(binary_path))
+    if (!exists(binary_path) && output_mode != "genfuzz")
     {
         std::string error("Binary file ");
 
@@ -124,7 +124,7 @@ try
 
     boost::filesystem::ifstream binary(binary_path, std::ios_base::binary);
 
-    if (!binary)
+    if (!binary && output_mode != "genfuzz")
         throw std::runtime_error("Could not open binary input file");
 
     // Set up output and error streams
@@ -149,7 +149,8 @@ try
     analyzer.set_quiet(quiet || output_mode == "fuzz" || output_mode == "genfuzz");
 
     // Do the actual analysis, set the return result so we can track errors therein
-    int result(analyzer.analyze_binary(starting_struct) == false);
+    int result = output_mode != "genfuzz" &&
+                     !analyzer.analyze_binary(starting_struct);
 
     // clean up our output and error tee buffers
     sout.flush();
@@ -158,7 +159,10 @@ try
     serr.close();
 
     // grab the analysis forest - this is a huge structure.
-    auto_forest_t forest(analyzer.forest());
+    auto_forest_t forest;
+
+    if (output_mode != "genfuzz")
+        forest = analyzer.forest();
 
     if (output_mode == "cli")
     {
@@ -210,7 +214,7 @@ try
         // free it up.
         binary.close();
 
-        genfuzz(*forest, output_path);
+        genfuzz(ast, output_path);
     }
     else
     {

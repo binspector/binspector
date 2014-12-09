@@ -6,7 +6,8 @@ struct header_t
     unsigned 16 little creator2;
     unsigned 32 little bmp_offset;
 
-    invariant ok_magic_number = str(@magic_number) == 'BM';
+    invariant ok_B = magic_number[0] == 66; // 'B'
+    invariant ok_M = magic_number[1] == 77; // 'M';
 }
 
 struct dib_t
