@@ -6,7 +6,7 @@
 /**************************************************************************************************/
 
 // identity
-#include <binspector/analyzer.hpp>
+#include <binspector/ast.hpp>
 
 // asl
 #include <adobe/algorithm/copy.hpp>
@@ -139,8 +139,13 @@ std::size_t highest_byte_for(boost::uint64_t value)
 #endif
 /**************************************************************************************************/
 
-ast_t::ast_t() :
-    current_structure_m(nullptr),
+binspector_analyzer_t::binspector_analyzer_t(std::istream& binary_file,
+                                             std::ostream& output,
+                                             std::ostream& error) :
+    input_m(binary_file),
+    output_m(output),
+    error_m(error),
+    current_structure_m(0),
     current_sentry_m(invalid_position_k),
     forest_m(new inspection_forest_t),
     eof_signalled_m(false)
@@ -149,15 +154,15 @@ ast_t::ast_t() :
 
 /**************************************************************************************************/
 
-void ast_t::set_current_structure(adobe::name_t structure_name)
+void binspector_analyzer_t::set_current_structure(adobe::name_t structure_name)
 {
     current_structure_m = &structure_map_m[structure_name];
 }
 
 /**************************************************************************************************/
 
-void ast_t::add_named_field(adobe::name_t              name,
-                            const adobe::dictionary_t& parameters)
+void binspector_analyzer_t::add_named_field(adobe::name_t              name,
+                                            const adobe::dictionary_t& parameters)
 {
     if (current_structure_m == 0)
         return;
@@ -171,7 +176,7 @@ void ast_t::add_named_field(adobe::name_t              name,
 
 /**************************************************************************************************/
 
-void ast_t::add_unnamed_field(const adobe::dictionary_t& parameters)
+void binspector_analyzer_t::add_unnamed_field(const adobe::dictionary_t& parameters)
 {
     if (current_structure_m == 0)
         return;
@@ -183,7 +188,7 @@ void ast_t::add_unnamed_field(const adobe::dictionary_t& parameters)
 
 /**************************************************************************************************/
 
-void ast_t::add_typedef(adobe::name_t              /*typedef_name*/,
+void binspector_analyzer_t::add_typedef(adobe::name_t              /*typedef_name*/,
                                         const adobe::dictionary_t& typedef_parameters)
 {
     if (current_structure_m == 0)

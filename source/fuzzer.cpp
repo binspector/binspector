@@ -3,7 +3,7 @@
     Distributed under the Boost Software License, Version 1.0.
     (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 */
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 // stdc
 #include <sys/stat.h>
@@ -28,11 +28,11 @@
 #include <binspector/analyzer.hpp>
 #include <binspector/parser.hpp>
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 namespace {
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 struct zero_generator_t
 {
@@ -54,7 +54,7 @@ struct zero_generator_t
     }
 };
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 struct ones_generator_t
 {
@@ -76,7 +76,7 @@ struct ones_generator_t
     }
 };
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 template <typename T>
 inline rawbytes_t raw_disintegration(const T& value)
@@ -86,7 +86,7 @@ inline rawbytes_t raw_disintegration(const T& value)
     return rawbytes_t(rawp, rawp + sizeof(value));
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 rawbytes_t disintegrate_value(const adobe::any_regular_t& regular_value,
                               boost::uint64_t             bit_count,
@@ -162,7 +162,7 @@ rawbytes_t disintegrate_value(const adobe::any_regular_t& regular_value,
     return result;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 struct enumerated_generator_t
 {
@@ -197,7 +197,7 @@ private:
     bool                 is_big_endian_m;
 };
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 // might want to make this into a standalone struct that can be owned by the fuzzer, so the
 // set isn't shared across multiple fuzzes (if we ever get there.)
 bool validate_unique_outfile(const boost::filesystem::path& file,
@@ -221,7 +221,7 @@ bool validate_unique_outfile(const boost::filesystem::path& file,
     return true;
 };
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool duplicate_file(const boost::filesystem::path& src,
                     const boost::filesystem::path& dst,
@@ -251,7 +251,7 @@ bool duplicate_file(const boost::filesystem::path& src,
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 inline void rawbytes_out(std::ofstream& output, const rawbytes_t& data)
 {
@@ -261,7 +261,7 @@ inline void rawbytes_out(std::ofstream& output, const rawbytes_t& data)
     output.write(reinterpret_cast<const char*>(&data[0]), data.size());
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 struct fuzzer_t
 {
@@ -295,7 +295,7 @@ private:
     boost::filesystem::ofstream output_m; // summary output
 };
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 template <typename FuzzGenerator>
 std::size_t fuzzer_t::fuzz_location_with(const inspection_position_t& location,
@@ -344,7 +344,7 @@ std::size_t fuzzer_t::fuzz_location_with(const inspection_position_t& location,
     return 1;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 std::size_t fuzzer_t::fuzz_location_with_enumeration(const inspection_position_t& location,
                                                      boost::uint64_t              bit_count,
@@ -366,7 +366,7 @@ std::size_t fuzzer_t::fuzz_location_with_enumeration(const inspection_position_t
     return result;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 std::size_t fuzzer_t::fuzz_shuffle_set_with(const node_set_t& node_set)
 {
@@ -470,7 +470,7 @@ std::size_t fuzzer_t::fuzz_shuffle_set_with(const node_set_t& node_set)
     return (count - 1);
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 std::size_t fuzzer_t::fuzz_shuffle_entry(const attack_vector_t& entry)
 {
@@ -508,7 +508,7 @@ std::size_t fuzzer_t::fuzz_shuffle_entry(const attack_vector_t& entry)
     return fuzz_shuffle_set_with(node_set);
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 std::size_t fuzzer_t::fuzz_usage_entry(const attack_vector_t& entry)
 {
@@ -564,7 +564,7 @@ std::size_t fuzzer_t::fuzz_usage_entry(const attack_vector_t& entry)
     return result;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 void fuzzer_t::fuzz(const inspection_forest_t& forest)
 {
@@ -602,7 +602,7 @@ void fuzzer_t::fuzz(const inspection_forest_t& forest)
     std::cerr << "Generated " << result << " files\n";
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 boost::filesystem::path get_base_output_path(const boost::filesystem::path& input_path,
                                              const boost::filesystem::path& output_root)
@@ -622,7 +622,7 @@ boost::filesystem::path get_base_output_path(const boost::filesystem::path& inpu
     return result;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 fuzzer_t::fuzzer_t(const boost::filesystem::path& input_path,
                    const boost::filesystem::path& output_root) :
@@ -633,11 +633,11 @@ fuzzer_t::fuzzer_t(const boost::filesystem::path& input_path,
     output_m(base_output_path_m / (basename_m + "_fuzzing_summary.txt"))
 { }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 } // namespace
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 void fuzz(const inspection_forest_t&     forest,
           const boost::filesystem::path& input_path,
@@ -646,4 +646,4 @@ void fuzz(const inspection_forest_t&     forest,
     fuzzer_t(input_path, output_root).fuzz(forest);
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/

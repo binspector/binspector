@@ -3,7 +3,7 @@
     Distributed under the Boost Software License, Version 1.0.
     (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 */
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 #ifndef BINSPECTOR_COMMON_HPP
 #define BINSPECTOR_COMMON_HPP
@@ -22,7 +22,7 @@
 // application
 #include <binspector/forest.hpp>
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 rawbytes_t           fetch(bitreader_t&                 input,
                            const inspection_position_t& location,
@@ -37,11 +37,11 @@ adobe::any_regular_t fetch_and_evaluate(bitreader_t&                 input,
                                         atom_base_type_t             base_type,
                                         bool                         is_big_endian);
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 using namespace adobe::literals; // for the _name user-defined literal.
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 #define CONSTANT_KEY(x) \
 static const adobe::static_name_t key_##x = #x##_name
@@ -54,7 +54,7 @@ static const adobe::static_name_t private_key_##x = "."#x##_name
 
 #include <binspector/constant_names.hpp>
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 enum conditional_expression_t
 {
@@ -63,7 +63,7 @@ enum conditional_expression_t
     else_k
 };
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 enum field_size_t
 {
@@ -74,16 +74,16 @@ enum field_size_t
     field_size_delimiter_k
 };
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 inspection_position_t starting_offset_for(inspection_branch_t branch);
 inspection_position_t ending_offset_for(inspection_branch_t branch);
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 std::string build_path(const_inspection_branch_t main, const_inspection_branch_t branch);
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 template <typename T>
 T contextual_evaluation_of(const adobe::array_t& expression,
@@ -94,7 +94,7 @@ T contextual_evaluation_of(const adobe::array_t& expression,
     return contextual_evaluation_of<adobe::any_regular_t>(expression, main_branch, current_branch, input).cast<T>();
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 template <>
 adobe::any_regular_t contextual_evaluation_of(const adobe::array_t& expression,
@@ -108,7 +108,7 @@ inspection_branch_t  contextual_evaluation_of(const adobe::array_t& expression,
                                               inspection_branch_t   current_branch,
                                               bitreader_t&          input);
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 template <typename T>
 T finalize_lookup(inspection_branch_t root,
@@ -125,7 +125,7 @@ adobe::any_regular_t finalize_lookup(inspection_branch_t root,
                                      bitreader_t&        input,
                                      bool                finalize);
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 template <typename T>
 struct save_restore
@@ -147,7 +147,7 @@ private:
     T  old_value_m;
 };
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 template <typename T>
 struct temp_assignment : public save_restore<T>
@@ -159,7 +159,7 @@ struct temp_assignment : public save_restore<T>
     }
 };
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 struct attack_vector_t
 {
@@ -196,8 +196,8 @@ typedef std::vector<attack_vector_t> attack_vector_set_t;
 
 attack_vector_set_t build_attack_vector_set(const inspection_forest_t& forest);
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 // BINSPECTOR_COMMON_HPP
 #endif
 
-/****************************************************************************************************/
+/**************************************************************************************************/

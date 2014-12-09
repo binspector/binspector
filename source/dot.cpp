@@ -3,7 +3,7 @@
     Distributed under the Boost Software License, Version 1.0.
     (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 */
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 // stdc++
 #include <iterator>
@@ -27,18 +27,18 @@
 // REVISIT (fbrereto) : There's a ton of string concatenation pessimizations in
 //                      this file. They need to be cleaned up.
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 namespace {
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 typedef binspector_analyzer_t::structure_map_t::key_type       key_t; // name_t
 typedef binspector_analyzer_t::structure_map_t::mapped_type    mapped_t; // array_t
 typedef binspector_analyzer_t::structure_map_t::const_iterator iterator_t;
 typedef mapped_t::const_iterator                               mapped_iterator_t;
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 std::string padded_id(const std::size_t x, std::size_t pad)
 {
@@ -53,7 +53,7 @@ std::string padded_id(const std::size_t x, std::size_t pad)
     return tmp2 += tmp;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool coverage_check(adobe::name_t name)
 {
@@ -69,7 +69,7 @@ bool coverage_check(adobe::name_t name)
     return false;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 template <typename T>
 inline const T& dvalue(const adobe::dictionary_t& dict, adobe::name_t key)
@@ -77,21 +77,21 @@ inline const T& dvalue(const adobe::dictionary_t& dict, adobe::name_t key)
     return get_value(dict, key).cast<T>();
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 std::string field_expression(const adobe::dictionary_t& dict, adobe::name_t key)
 {
     return adobe::format_expression(dvalue<adobe::array_t>(dict, key), 0, true);
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 adobe::name_t get_field_type(const adobe::dictionary_t& field)
 {
     return dvalue<adobe::name_t>(field, key_field_type);
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 void replace_all(std::string& haystack, const std::string& needle, const std::string& new_needle)
 {
@@ -110,7 +110,7 @@ void replace_all(std::string& haystack, const std::string& needle, const std::st
     }
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 std::string record_escape(const std::string& src)
 {
@@ -124,7 +124,7 @@ std::string record_escape(const std::string& src)
     return result;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 conditional_expression_t get_conditional_type(const adobe::any_regular_t& any_field)
 {
@@ -136,7 +136,7 @@ conditional_expression_t get_conditional_type(const adobe::any_regular_t& any_fi
     return dvalue<conditional_expression_t>(field, key_field_conditional_type);
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 std::string name_map(adobe::name_t name)
 {
@@ -161,14 +161,14 @@ std::string name_map(adobe::name_t name)
     return tag;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 std::string spaces(std::size_t count)
 {
     return std::string(count*2, ' ');
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 typedef std::map<std::string, std::string> dot_attribute_map_t;
 
@@ -234,7 +234,7 @@ struct dot_graph_t
     std::vector<std::string> setting_vector_m;
 };
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 void graph_struct(const binspector_analyzer_t::structure_map_t& struct_map,
                   key_t                                         name,
@@ -383,7 +383,7 @@ void graph_struct(const binspector_analyzer_t::structure_map_t& struct_map,
     }
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 std::string format_attribute_map(const dot_attribute_map_t& map)
 {
@@ -408,7 +408,7 @@ std::string format_attribute_map(const dot_attribute_map_t& map)
     return result;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 std::string format_node(const dot_node_t& node)
 {
@@ -417,7 +417,7 @@ std::string format_node(const dot_node_t& node)
     return result += node.id_m + " " + format_attribute_map(node.attribute_map_m) + ";\n";
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 std::string format_edge(const dot_edge_t& edge)
 {
@@ -426,7 +426,7 @@ std::string format_edge(const dot_edge_t& edge)
     return result += edge.from_m + " -> " + edge.to_m + format_attribute_map(edge.attribute_map_m) + ";\n";
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 void format_graph(dot_graph_t& graph, std::ostream& output)
 {
@@ -473,11 +473,11 @@ void format_graph(dot_graph_t& graph, std::ostream& output)
     output << "} // " << graph.name_m << '\n';
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 } // namespace
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 void dot_graph(const binspector_analyzer_t::structure_map_t& struct_map,
                const std::string&                            starting_struct,
@@ -518,4 +518,4 @@ void dot_graph(const binspector_analyzer_t::structure_map_t& struct_map,
     std::cerr << "File written to " << output_filename.string() << '\n';
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/

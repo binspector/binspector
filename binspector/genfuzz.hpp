@@ -5,8 +5,8 @@
 */
 /**************************************************************************************************/
 
-#ifndef BINSPECTOR_FUZZER_HPP
-#define BINSPECTOR_FUZZER_HPP
+#ifndef BINSPECTOR_GENFUZZER_HPP
+#define BINSPECTOR_GENFUZZER_HPP
 
 // boost
 #include <boost/filesystem.hpp>
@@ -16,12 +16,11 @@
 
 /**************************************************************************************************/
 
-void fuzz(const inspection_forest_t&     forest,
-          const boost::filesystem::path& input_path,
-          const boost::filesystem::path& output_root);
+void genfuzz(const inspection_forest_t&     forest,
+             const boost::filesystem::path& output_root);
 
 /**************************************************************************************************/
-// BINSPECTOR_FUZZER_HPP
+// BINSPECTOR_GENFUZZER_HPP
 #endif
 
 /**************************************************************************************************/

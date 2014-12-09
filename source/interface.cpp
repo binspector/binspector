@@ -3,7 +3,7 @@
     Distributed under the Boost Software License, Version 1.0.
     (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 */
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 // identity
 #include <binspector/interface.hpp>
@@ -15,11 +15,11 @@
 #include <adobe/istream.hpp>
 #include <adobe/implementation/expression_parser.hpp>
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 namespace {
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 inline void indent_stream(std::ostream& stream, std::size_t count)
     { for (; count != 0; --count) stream << "    "; }
@@ -39,15 +39,15 @@ void stream_out(const adobe::any_regular_t& value,
         s << d;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 } // namespace
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 #if 0
 #pragma mark -
 #endif
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 binspector_interface_t::binspector_interface_t(std::istream& binary_file,
                                    auto_forest_t forest,
@@ -95,7 +95,7 @@ binspector_interface_t::binspector_interface_t(std::istream& binary_file,
     command_map_m.insert(command_map_t::value_type("find_field",          &binspector_interface_t::find_field));
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool binspector_interface_t::quit(const command_segment_set_t&)
 {
@@ -104,7 +104,7 @@ bool binspector_interface_t::quit(const command_segment_set_t&)
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool binspector_interface_t::help(const command_segment_set_t&)
 {
@@ -157,7 +157,7 @@ bool binspector_interface_t::help(const command_segment_set_t&)
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool binspector_interface_t::print_branch(const command_segment_set_t&)
 {
@@ -170,7 +170,7 @@ bool binspector_interface_t::print_branch(const command_segment_set_t&)
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool binspector_interface_t::print_structure(const command_segment_set_t&)
 {
@@ -187,7 +187,7 @@ bool binspector_interface_t::print_structure(const command_segment_set_t&)
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool binspector_interface_t::print_string(const command_segment_set_t& parameters)
 {
@@ -257,7 +257,7 @@ bool binspector_interface_t::print_string(const command_segment_set_t& parameter
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool binspector_interface_t::step_in(const command_segment_set_t& parameters)
 {
@@ -295,7 +295,7 @@ bool binspector_interface_t::step_in(const command_segment_set_t& parameters)
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool binspector_interface_t::step_out(const command_segment_set_t& parameters)
 {
@@ -314,7 +314,7 @@ bool binspector_interface_t::step_out(const command_segment_set_t& parameters)
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool binspector_interface_t::top(const command_segment_set_t& parameters)
 {
@@ -330,7 +330,7 @@ bool binspector_interface_t::top(const command_segment_set_t& parameters)
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool binspector_interface_t::detail_field(const command_segment_set_t& parameters)
 {
@@ -355,7 +355,7 @@ bool binspector_interface_t::detail_field(const command_segment_set_t& parameter
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool binspector_interface_t::detail_offset(const command_segment_set_t& parameters)
 {
@@ -417,7 +417,7 @@ bool binspector_interface_t::detail_offset(const command_segment_set_t& paramete
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool binspector_interface_t::evaluate_expression(const command_segment_set_t& parameters)
 {
@@ -459,7 +459,7 @@ bool binspector_interface_t::evaluate_expression(const command_segment_set_t& pa
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool binspector_interface_t::dump_field(const command_segment_set_t& parameters)
 {
@@ -500,7 +500,7 @@ bool binspector_interface_t::dump_field(const command_segment_set_t& parameters)
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool binspector_interface_t::dump_offset(const command_segment_set_t& parameters)
 {
@@ -517,7 +517,7 @@ bool binspector_interface_t::dump_offset(const command_segment_set_t& parameters
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool binspector_interface_t::save_field(const command_segment_set_t& parameters)
 {
@@ -563,7 +563,7 @@ bool binspector_interface_t::save_field(const command_segment_set_t& parameters)
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool binspector_interface_t::usage_metrics(const command_segment_set_t& /*parameters*/)
 {
@@ -582,7 +582,7 @@ bool binspector_interface_t::usage_metrics(const command_segment_set_t& /*parame
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 bool binspector_interface_t::find_field(const command_segment_set_t& parameters)
 {
@@ -605,7 +605,7 @@ bool binspector_interface_t::find_field(const command_segment_set_t& parameters)
     return true;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 template <typename R>
 void binspector_interface_t::find_field_in_range(adobe::name_t name, const R& f)
@@ -617,7 +617,7 @@ void binspector_interface_t::find_field_in_range(adobe::name_t name, const R& f)
             output_m << build_path(forest_m->begin(), iter.base()) << '\n';
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 void binspector_interface_t::save_range(boost::uint64_t first, boost::uint64_t last, const std::string& filename)
 {
@@ -649,7 +649,7 @@ void binspector_interface_t::save_range(boost::uint64_t first, boost::uint64_t l
     }
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 void binspector_interface_t::dump_range(boost::uint64_t first, boost::uint64_t last)
 {
@@ -712,7 +712,7 @@ void binspector_interface_t::dump_range(boost::uint64_t first, boost::uint64_t l
     }
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 void binspector_interface_t::command_line()
 {
@@ -738,7 +738,7 @@ void binspector_interface_t::command_line()
     } while (std::cin.getline(&cl_buffer_s[0], cl_buffer_s.size()));
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 std::vector<std::string> binspector_interface_t::split_command_string(const std::string& command)
 {
@@ -779,7 +779,7 @@ std::vector<std::string> binspector_interface_t::split_command_string(const std:
     return result;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 inspection_branch_t binspector_interface_t::expression_to_node(const std::string& expression_string)
 {
@@ -795,7 +795,7 @@ inspection_branch_t binspector_interface_t::expression_to_node(const std::string
                                                          input_m);
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 template <typename R>
 void binspector_interface_t::print_branch_depth_range(const R& f)
@@ -806,7 +806,7 @@ void binspector_interface_t::print_branch_depth_range(const R& f)
         print_node(iter, true);
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 void binspector_interface_t::print_node(inspection_branch_t branch, bool recursing, std::size_t depth)
 {
@@ -950,14 +950,14 @@ void binspector_interface_t::print_node(inspection_branch_t branch, bool recursi
     }
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 void binspector_interface_t::print_node(depth_full_iterator_t branch, bool recursing)
 {
     print_node(branch.base(), recursing, branch.depth());
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 void binspector_interface_t::detail_struct_or_array_node(inspection_branch_t struct_node)
 {
@@ -999,7 +999,7 @@ void binspector_interface_t::detail_struct_or_array_node(inspection_branch_t str
     output_m << '\n';
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 void binspector_interface_t::detail_atom_node(inspection_branch_t atom_node)
 {
@@ -1039,7 +1039,7 @@ void binspector_interface_t::detail_atom_node(inspection_branch_t atom_node)
     output_m << ")\n" << std::dec;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 void binspector_interface_t::detail_skip(inspection_branch_t skip_node)
 {
@@ -1056,7 +1056,7 @@ void binspector_interface_t::detail_skip(inspection_branch_t skip_node)
     output_m << '\n';
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 void binspector_interface_t::detail_node(inspection_branch_t node)
 {
@@ -1078,4 +1078,4 @@ void binspector_interface_t::detail_node(inspection_branch_t node)
     }
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/

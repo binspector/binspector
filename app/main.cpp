@@ -3,7 +3,7 @@
     Distributed under the Boost Software License, Version 1.0.
     (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 */
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 // stdc++
 #include <iostream>
@@ -21,15 +21,16 @@
 #include <binspector/analyzer.hpp>
 #include <binspector/dot.hpp>
 #include <binspector/fuzzer.hpp>
+#include <binspector/genfuzz.hpp>
 #include <binspector/html_dump.hpp>
 #include <binspector/interface.hpp>
 #include <binspector/parser.hpp>
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 typedef std::vector<boost::filesystem::path> path_set;
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 int main(int argc, char** argv)
 try
@@ -62,7 +63,8 @@ try
       html: \tformatted HTML output of entire analyzed structure (to stdout)\n\
   validate: \tvalidation of binary file given the template. Only outputs notifications and errors (to stdout), then exits\n\
       fuzz: \tintelligent document fuzzing engine (multi-file output)\n\
-      dot:  \tgenerate template file dot graph for visualization")
+   genfuzz: \texperimental fuzzy document auto-generation\n\
+       dot: \tgenerate template file dot graph for visualization")
         ("include,I",
             boost::program_options::value<path_set>(&include_path_set)
                 ->composing(),
@@ -171,7 +173,7 @@ try
     //                      stream to analyze_binary
     binspector_analyzer_t analyzer(binary, sout, serr);
 
-    analyzer.set_quiet(quiet || output_mode == "fuzz");
+    analyzer.set_quiet(quiet || output_mode == "fuzz" || output_mode == "genfuzz");
 
     try
     {
@@ -245,11 +247,19 @@ try
     }
     else if (output_mode == "fuzz")
     {
-        // at this point the source binary isn't needed for fuzzing
-        // so we can free it up.
+        // at this point the source binary isn't needed for fuzzing so we can
+        // free it up.
         binary.close();
 
         fuzz(*forest, binary_path, output_path);
+    }
+    else if (output_mode == "genfuzz")
+    {
+        // at this point the source binary isn't needed for fuzzing so we can
+        // free it up.
+        binary.close();
+
+        genfuzz(*forest, output_path);
     }
     else if (output_mode == "dot")
     {
@@ -282,4 +292,4 @@ catch (...)
     return 1;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/

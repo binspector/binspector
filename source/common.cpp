@@ -3,7 +3,7 @@
     Distributed under the Boost Software License, Version 1.0.
     (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 */
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 // identity
 #include <binspector/common.hpp>
@@ -17,11 +17,11 @@
 #include <adobe/implementation/token.hpp>
 #include <adobe/virtual_machine.hpp>
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 namespace {
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 template <typename T>
 inline adobe::any_regular_t convert_raw(const rawbytes_t& raw)
@@ -83,11 +83,11 @@ inline adobe::any_regular_t convert_raw(const rawbytes_t& raw,
     throw std::runtime_error("convert_raw: invalid bit count");
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 #if 0
 #pragma mark -
 #endif
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 class evaluation_error_t : public std::runtime_error
 {
@@ -100,7 +100,7 @@ public:
     { }
 };
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 struct contextual_evaluation_engine_t
 {
@@ -132,7 +132,7 @@ private:
     bool                  finalize_m;
 };
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 contextual_evaluation_engine_t::contextual_evaluation_engine_t(const adobe::array_t& expression,
                                                                inspection_branch_t   main_branch,
@@ -144,7 +144,7 @@ contextual_evaluation_engine_t::contextual_evaluation_engine_t(const adobe::arra
     input_m(input)
 { }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 #if 0
 template <typename T, typename U>
 void bad_cast_details(const adobe::bad_cast& error, const std::string& details)
@@ -156,7 +156,7 @@ void bad_cast_details(const adobe::bad_cast& error, const std::string& details)
         throw std::runtime_error(details);
 }
 #endif
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 adobe::any_regular_t contextual_evaluation_engine_t::evaluate(bool finalize)
 try
@@ -244,7 +244,7 @@ catch (const std::exception& error)
     throw std::runtime_error(details);
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 adobe::any_regular_t contextual_evaluation_engine_t::named_index_lookup(const adobe::any_regular_t& value,
                                                                         adobe::name_t               name,
@@ -273,7 +273,7 @@ adobe::any_regular_t contextual_evaluation_engine_t::named_index_lookup(const ad
     return adobe::any_regular_t();
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 adobe::any_regular_t contextual_evaluation_engine_t::numeric_index_lookup(const adobe::any_regular_t& value,
                                                                           std::size_t                 index)
@@ -310,7 +310,7 @@ adobe::any_regular_t contextual_evaluation_engine_t::numeric_index_lookup(const 
     return adobe::any_regular_t();
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 adobe::any_regular_t contextual_evaluation_engine_t::stack_variable_lookup(adobe::name_t name)
 {
@@ -358,7 +358,7 @@ adobe::any_regular_t contextual_evaluation_engine_t::stack_variable_lookup(adobe
     throw std::runtime_error(error);
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 inspection_branch_t contextual_evaluation_engine_t::regular_to_branch(const adobe::any_regular_t& name_or_branch)
 {
@@ -388,7 +388,7 @@ inspection_branch_t contextual_evaluation_engine_t::regular_to_branch(const adob
                                                 type.name()));
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 adobe::any_regular_t contextual_evaluation_engine_t::array_function_lookup(adobe::name_t         name,
                                                                            const adobe::array_t& parameter_set)
@@ -739,16 +739,16 @@ adobe::any_regular_t contextual_evaluation_engine_t::array_function_lookup(adobe
                                                 "' not found"));
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 } // namespace
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 #if 0
 #pragma mark -
 #endif
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 adobe::any_regular_t evaluate(const rawbytes_t& raw,
                               boost::uint64_t   bit_count,
@@ -769,7 +769,7 @@ adobe::any_regular_t evaluate(const rawbytes_t& raw,
     return convert_raw(byte_set, bit_count, base_type);
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 adobe::any_regular_t fetch_and_evaluate(bitreader_t&                 input,
                                         const inspection_position_t& location,
@@ -780,7 +780,7 @@ adobe::any_regular_t fetch_and_evaluate(bitreader_t&                 input,
     return evaluate(input.read_bits(location, bit_count), bit_count, base_type, is_big_endian);
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 template <>
 adobe::any_regular_t finalize_lookup(inspection_branch_t root,
@@ -870,7 +870,7 @@ adobe::any_regular_t finalize_lookup(inspection_branch_t root,
     return result;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 template <>
 adobe::any_regular_t contextual_evaluation_of(const adobe::array_t& expression,
@@ -890,7 +890,7 @@ inspection_branch_t contextual_evaluation_of(const adobe::array_t& expression,
     return contextual_evaluation_engine_t(expression, main_branch, current_node, input).evaluate(false).cast<inspection_branch_t>();
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 inspection_position_t starting_offset_for(inspection_branch_t branch)
 {
@@ -903,7 +903,7 @@ inspection_position_t starting_offset_for(inspection_branch_t branch)
     return node_value(branch, ATOM_VALUE_LOCATION);
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 inspection_position_t ending_offset_for(inspection_branch_t branch)
 {
@@ -919,7 +919,7 @@ inspection_position_t ending_offset_for(inspection_branch_t branch)
     return position + bitpos(bit_count) - inspection_byte_k;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 std::string build_path(const_inspection_branch_t main, const_inspection_branch_t current)
 {
@@ -978,7 +978,7 @@ std::string build_path(const_inspection_branch_t main, const_inspection_branch_t
     return result;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 attack_vector_set_t build_attack_vector_set(const inspection_forest_t& forest)
 {
@@ -1025,4 +1025,4 @@ attack_vector_set_t build_attack_vector_set(const inspection_forest_t& forest)
     return result;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/

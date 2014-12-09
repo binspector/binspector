@@ -3,7 +3,7 @@
     Distributed under the Boost Software License, Version 1.0.
     (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 */
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 #ifndef BINSPECTOR_FOREST_HPP
 #define BINSPECTOR_FOREST_HPP
@@ -19,7 +19,7 @@
 // application
 #include <binspector/bitreader.hpp>
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 enum node_flags_t
 {
@@ -55,7 +55,7 @@ inline bool enum_get(const EnumType& enumeration, EnumType flag)
     return (enumeration & flag) != 0;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 enum atom_base_type_t
 {
@@ -65,7 +65,7 @@ enum atom_base_type_t
     atom_float_k,
 };
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 struct node_t
 {
@@ -149,7 +149,7 @@ struct node_t
 
 #define STRUCT_PROPERTY_STRUCT_NAME  (&node_t::struct_name_m)
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 
 typedef node_t                              forest_node_t;
 typedef adobe::forest<forest_node_t>        inspection_forest_t;
@@ -165,7 +165,7 @@ struct node_member
     typedef T(node_t::*value)() const;
 };
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 // A property is something generic to the node's type, like structure name or endianness.
 // If the node is an array element we get the property from the parent, otherwise itself.
 template <typename T>
@@ -210,7 +210,7 @@ inline const_inspection_branch_t property_node_for(const_inspection_branch_t bra
                branch;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 // A value is something specific to this node, like location or name.
 // If the node is an array root, we get the value from the first child, otherwise itself.
 template <typename T>
@@ -249,8 +249,8 @@ T node_value(const_inspection_branch_t branch, T node_t::*member)
     return node.*member;
 }
 
-/****************************************************************************************************/
+/**************************************************************************************************/
 // BINSPECTOR_FOREST_HPP
 #endif
 
-/****************************************************************************************************/
+/**************************************************************************************************/
