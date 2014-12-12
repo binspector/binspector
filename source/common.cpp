@@ -810,15 +810,18 @@ adobe::any_regular_t finalize_lookup(inspection_branch_t root,
     }
     else if (node_property(branch, NODE_PROPERTY_IS_ATOM))
     {
-        atom_base_type_t      base_type(node_property(branch, ATOM_PROPERTY_BASE_TYPE));
-        bool                  is_big_endian(node_property(branch, ATOM_PROPERTY_IS_BIG_ENDIAN));
-        boost::uint64_t       bit_count(node_property(branch, ATOM_PROPERTY_BIT_COUNT));
-        inspection_position_t position(node_value(branch, ATOM_VALUE_LOCATION));
+        if (node_value(branch, CONST_VALUE_IS_EVALUATED) == false)
+            {
+            atom_base_type_t      base_type(node_property(branch, ATOM_PROPERTY_BASE_TYPE));
+            bool                  is_big_endian(node_property(branch, ATOM_PROPERTY_IS_BIG_ENDIAN));
+            boost::uint64_t       bit_count(node_property(branch, ATOM_PROPERTY_BIT_COUNT));
+            inspection_position_t position(node_value(branch, ATOM_VALUE_LOCATION));
 
-        // REVISIT (fbrereto) : Is there any reason why we wouldn't want to cache
-        //                      the value of an atom like we do a const or slot?
+            branch->evaluated_value_m = fetch_and_evaluate(input, position, bit_count, base_type, is_big_endian);
+            branch->evaluated_m = true;
+            }
 
-        result = fetch_and_evaluate(input, position, bit_count, base_type, is_big_endian);
+        result = node_value(branch, CONST_VALUE_EVALUATED_VALUE);
     }
     else if (node_property(branch, NODE_PROPERTY_IS_CONST) ||
              node_property(branch, NODE_PROPERTY_IS_SLOT))
@@ -1021,6 +1024,100 @@ attack_vector_set_t build_attack_vector_set(const inspection_forest_t& forest)
     adobe::sort(result);
 
     std::cerr << "Scanned " << node_count << " nodes\n";
+
+    return result;
+}
+
+/**************************************************************************************************/
+
+namespace {
+
+/**************************************************************************************************/
+
+template <typename T>
+inline rawbytes_t raw_disintegration(const T& value)
+{
+    const char* rawp(reinterpret_cast<const char*>(&value));
+
+    return rawbytes_t(rawp, rawp + sizeof(value));
+}
+
+/**************************************************************************************************/
+
+} // namespace
+
+/**************************************************************************************************/
+
+rawbytes_t disintegrate_value(const adobe::any_regular_t& regular_value,
+                              boost::uint64_t             bit_count,
+                              atom_base_type_t            base_type,
+                              bool                        is_big_endian)
+{
+    rawbytes_t result;
+
+    // The first step is to convert the POD to a raw byte sequence.
+
+    double value(regular_value.cast<double>());
+
+    if (base_type == atom_unknown_k)
+    {
+        throw std::runtime_error("disintegrate_value: unknown atom base type");
+    }
+    else if (base_type == atom_float_k)
+    {
+        BOOST_STATIC_ASSERT((sizeof(float) == 4));
+        BOOST_STATIC_ASSERT((sizeof(double) == 8));
+
+        if (bit_count == (sizeof(float) * 8))
+            result = raw_disintegration<float>(value);
+        else if (bit_count == (sizeof(double) * 8))
+            result = raw_disintegration<double>(value);
+        else
+            throw std::runtime_error("disintegrate_value: float atom of specified bit count not supported.");
+    }
+    else if (bit_count <= 8)
+    {
+        if (base_type == atom_signed_k)
+            result = raw_disintegration<boost::int8_t>(value);
+        else if (base_type == atom_unsigned_k)
+            result = raw_disintegration<boost::uint8_t>(value);
+    }
+    else if (bit_count <= 16)
+    {
+        if (base_type == atom_signed_k)
+            result = raw_disintegration<boost::int16_t>(value);
+        else if (base_type == atom_unsigned_k)
+            result = raw_disintegration<boost::uint16_t>(value);
+    }
+    else if (bit_count <= 32)
+    {
+        if (base_type == atom_signed_k)
+            result = raw_disintegration<boost::int32_t>(value);
+        else if (base_type == atom_unsigned_k)
+            result = raw_disintegration<boost::uint32_t>(value);
+    }
+    else if (bit_count <= 64)
+    {
+        if (base_type == atom_signed_k)
+            result = raw_disintegration<boost::int64_t>(value);
+        else if (base_type == atom_unsigned_k)
+            result = raw_disintegration<boost::uint64_t>(value);
+    }
+    else
+    {
+        throw std::runtime_error("disintegrate_value: invalid bit count");
+    }
+
+    // The second step is to do any necessary endian-swapping of the raw byte sequence.
+
+#if __LITTLE_ENDIAN__ || defined(_M_IX86) || defined(_WIN32)
+    if (is_big_endian)
+        std::reverse(result.begin(), result.end());
+#endif
+#if __BIG_ENDIAN__
+    if (!is_big_endian)
+        std::reverse(result.begin(), result.end());
+#endif
 
     return result;
 }

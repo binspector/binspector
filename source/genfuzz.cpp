@@ -8,6 +8,7 @@
 // stdc++
 #include <iostream>
 #include <fstream>
+#include <random>
 
 // boost
 #include <boost/filesystem.hpp>
@@ -41,11 +42,42 @@ boost::filesystem::path get_base_output_path(const boost::filesystem::path& outp
 }
 
 /**************************************************************************************************/
+
+struct bitwriter_t
+{
+    explicit bitwriter_t(const boost::filesystem::path& file) :
+        output_m(file)
+    { }
+
+    ~bitwriter_t()
+    {
+        output_m.write(reinterpret_cast<const char*>(&buffer_m[0]), buffer_m.size());
+    }
+
+    void write(const node_t& node)
+    {
+        if (node.bit_count_m % 8)
+            throw std::runtime_error("non-byte aligned writing not supported.");
+
+        // It'd be great if we could emplace the whole vector onto the back of the buffer...
+        for (const auto& byte : disintegrate_value(node.evaluated_value_m,
+                                                   node.bit_count_m,
+                                                   node.type_m,
+                                                   node.get_flag(atom_is_big_endian_k)))
+            buffer_m.push_back(byte);
+    }
+
+    std::vector<std::uint8_t>   buffer_m;
+    boost::filesystem::ofstream output_m;
+};
+
+/**************************************************************************************************/
 // I have a sneaking suspicion this will start to look a lot like the analyzer.
 struct genfuzz_t
 {
     genfuzz_t(const ast_t&                   ast,
-              const boost::filesystem::path& output_root);
+              const boost::filesystem::path& output_root,
+              std::mt19937_64::result_type   seed = std::mt19937_64::default_seed);
 
     void generate();
 
@@ -60,7 +92,15 @@ private:
     void generate_structure(const structure_type& structure,
                             inspection_branch_t   parent);
 
-    const ast_t&                ast_m;
+    template <typename T>
+    T evaluate(const adobe::array_t& expression);
+
+    void write(const node_t& node);
+
+    void fuzz_atom(node_t& node);
+
+    const ast_t&         ast_m;
+    std::mt19937_64      rnd_m;
 
     // generation state and maintenance
     inspection_forest_t         forest_m;
@@ -71,14 +111,16 @@ private:
     boost::filesystem::path     base_output_path_m; // REVISIT: should be passed in
     std::string                 basename_m; // REVISIT: should be passed in
     std::string                 extension_m; // REVISIT: should be passed in
-    boost::filesystem::ofstream output_m; // summary output
+    bitwriter_t                 output_m; // output file
 };
 
 /**************************************************************************************************/
 
 genfuzz_t::genfuzz_t(const ast_t&                   ast,
-                     const boost::filesystem::path& output_root) :
+                     const boost::filesystem::path& output_root,
+                     std::mt19937_64::result_type   seed) :
     ast_m(ast),
+    rnd_m(seed),
     base_output_path_m(get_base_output_path(output_root)),
     basename_m("test"),
     extension_m("fixme.txt"),
@@ -135,6 +177,47 @@ void genfuzz_t::generate_substructure(const adobe::dictionary_t& field,
 
 /**************************************************************************************************/
 
+template <typename T>
+T genfuzz_t::evaluate(const adobe::array_t& expression)
+{
+    static std::ifstream dummy_stream("dummy.bin");
+    static bitreader_t   dummy_bitreader(dummy_stream);
+
+    return contextual_evaluation_of<T>(expression,
+                                       forest_m.begin(),
+                                       current_leaf_m,
+                                       dummy_bitreader);    
+}
+
+// specialization because double doesn't always implicitly convert to boost::uint64_t
+template <>
+boost::uint64_t genfuzz_t::evaluate(const adobe::array_t& expression)
+{
+    return static_cast<boost::uint64_t>(evaluate<double>(expression));
+}
+
+/**************************************************************************************************/
+
+void genfuzz_t::write(const node_t& node)
+{
+    output_m.write(node);
+}
+
+/**************************************************************************************************/
+
+void genfuzz_t::fuzz_atom(node_t& node)
+{
+    std::uint64_t      mask(static_cast<std::uint64_t>(-1) >> (64 - node.bit_count_m));
+    std::uint_fast64_t bits(rnd_m());
+    std::uint64_t      value(bits & mask);
+
+    // static_cast is tossing bits...
+    node.evaluated_value_m.assign(static_cast<double>(value));
+    node.evaluated_m = true;
+}
+
+/**************************************************************************************************/
+
 void genfuzz_t::generate_structure(const structure_type& structure,
                                    inspection_branch_t   parent)
 {
@@ -167,14 +250,51 @@ void genfuzz_t::generate_structure(const structure_type& structure,
             name = value_for<adobe::name_t>(field, key_field_name);
         }
 
-        output_m << type << " -- " << name << '\n';
+        std::cerr << type << " -- " << name << '\n';
 
-        if (type == value_field_type_struct)
+        // !!!!! NOTICE !!!!!
+        //
+        // From this point on we've actually added a node to the genfuzz forest.
+
+        inspection_branch_t sub_branch(new_branch(parent));
+        forest_node_t&      branch_data(*sub_branch);
+
+        temp_assignment<inspection_branch_t> node_stack(current_leaf_m, sub_branch);
+
+        branch_data.name_m = name;
+
+        if (type == value_field_type_atom)
         {
-            inspection_branch_t                  sub_branch(new_branch(parent));
-            temp_assignment<inspection_branch_t> node_stack(current_leaf_m, sub_branch);
-            forest_node_t&                       branch_data(*sub_branch);
-            adobe::name_t                        struct_name(value_for<adobe::name_t>(field, key_named_type_name));
+            const adobe::array_t& bit_count_expression(value_for<adobe::array_t>(field, key_atom_bit_count_expression));
+            const adobe::array_t& is_big_endian_expression(value_for<adobe::array_t>(field, key_atom_is_big_endian_expression));
+            bool                  is_big_endian(evaluate<bool>(is_big_endian_expression));
+
+            branch_data.bit_count_m = static_cast<boost::uint64_t>(evaluate<double>(bit_count_expression));
+            branch_data.type_m = value_for<atom_base_type_t>(field, key_atom_base_type);
+            branch_data.set_flag(atom_is_big_endian_k, is_big_endian);
+
+            const adobe::array_t& atom_invariant_expression(value_for<adobe::array_t>(field, key_field_atom_invariant_expression));
+
+            if (!atom_invariant_expression.empty())
+            {
+                branch_data.evaluated_m = true;
+
+                std::vector<double> atom_invariant_set(homogeneous_regular_cast<double>(evaluate<adobe::any_regular_t>(atom_invariant_expression)));
+
+                // pick one!
+                branch_data.evaluated_value_m.assign(atom_invariant_set[rnd_m() % atom_invariant_set.size()]);
+            }
+            else
+            {
+                // make up something!
+                fuzz_atom(branch_data);
+            }
+
+            write(branch_data);
+        }
+        else if (type == value_field_type_struct)
+        {
+            adobe::name_t struct_name(value_for<adobe::name_t>(field, key_named_type_name));
     
             branch_data.name_m = name;
             branch_data.set_flag(type_struct_k);

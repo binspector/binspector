@@ -197,6 +197,57 @@ typedef std::vector<attack_vector_t> attack_vector_set_t;
 attack_vector_set_t build_attack_vector_set(const inspection_forest_t& forest);
 
 /**************************************************************************************************/
+
+rawbytes_t disintegrate_value(const adobe::any_regular_t& regular_value,
+                              boost::uint64_t             bit_count,
+                              atom_base_type_t            base_type,
+                              bool                        is_big_endian);
+
+/**************************************************************************************************/
+
+class unexpected_regular_t : public std::runtime_error
+{
+public:
+    explicit unexpected_regular_t(const adobe::any_regular_t& regular) :
+        std::runtime_error(adobe::make_string("type unexpected: ",
+                                              regular.type_info().name()))
+    { }
+
+    virtual ~unexpected_regular_t() throw()
+    { }
+};
+
+/**************************************************************************************************/
+
+template <typename T>
+std::vector<T> homogeneous_regular_cast(const adobe::any_regular_t& regular)
+{
+    std::vector<T> result;
+
+    if (regular.type_info() == typeid(adobe::array_t))
+    {
+        for (const auto& entry : regular.cast<adobe::array_t>())
+        {
+            if (entry.type_info() == typeid(T))
+                result.push_back(entry.cast<T>());
+            else
+                throw unexpected_regular_t(entry);
+        }
+    }
+    else if (regular.type_info() == typeid(T))
+    {
+        result.push_back(regular.cast<T>());
+    }
+    else
+    {
+        throw unexpected_regular_t(regular);
+    }
+
+    return result;
+}
+
+/**************************************************************************************************/
+
 // BINSPECTOR_COMMON_HPP
 #endif
 

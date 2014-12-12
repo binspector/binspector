@@ -9,6 +9,7 @@
 #include <binspector/analyzer.hpp>
 
 // asl
+#include <adobe/algorithm/find.hpp>
 #include <adobe/algorithm/copy.hpp>
 #include <adobe/dictionary_set.hpp>
 #include <adobe/implementation/token.hpp>
@@ -410,7 +411,7 @@ try
             else if (sentry_value.type_info() == typeid(bitreader_t::pos_t))
                 sentry_position = sentry_value.cast<bitreader_t::pos_t>();
             else
-                throw std::runtime_error("Unexpected sentry type");
+                throw unexpected_regular_t(sentry_value);
 
             {
             temp_assignment<bitreader_t::pos_t> sentry_holder(current_sentry_m, sentry_position);
@@ -856,7 +857,6 @@ try
 
                     if (!atom_invariant_expression.empty())
                     {
-                        double atom_invariant(eval_here<double>(atom_invariant_expression));
                         double value(0);
 
                         {
@@ -865,13 +865,15 @@ try
                         value = finalize_lookup<double>(forest_m->begin(), sub_branch, input_m, true);
                         }
 
-                        if (atom_invariant != value)
+                        std::vector<double> atom_invariant_set(homogeneous_regular_cast<double>(eval_here<adobe::any_regular_t>(atom_invariant_expression)));
+
+                        if (adobe::find(atom_invariant_set, value) == end(atom_invariant_set))
                         {
                             std::string error;
 
                             error += build_path(sub_branch)
                                   +  " invariant (expected: "
-                                  +  boost::lexical_cast<std::string>(atom_invariant)
+                                  // +  boost::lexical_cast<std::string>(atom_invariant)
                                   +  ", found: "
                                   +  boost::lexical_cast<std::string>(value)
                                   +  ")";

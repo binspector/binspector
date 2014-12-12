@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CE41EEE6164B23BC0039C08B /* dot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE41EEE5164B23BC0039C08B /* dot.cpp */; };
 		CE41EEEA164B39910039C08B /* expression_formatter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE41EEE9164B39910039C08B /* expression_formatter.cpp */; };
 		CE71EC9F19EC3E49009BEDEE /* bignum-dtoa.cc in Sources */ = {isa = PBXBuildFile; fileRef = CE71EC8B19EC3E49009BEDEE /* bignum-dtoa.cc */; };
 		CE71ECA019EC3E49009BEDEE /* bignum.cc in Sources */ = {isa = PBXBuildFile; fileRef = CE71EC8D19EC3E49009BEDEE /* bignum.cc */; };
@@ -91,6 +90,8 @@
 		CE974839152A6AED00818CE3 /* value_semantic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE97482E152A6AED00818CE3 /* value_semantic.cpp */; };
 		CE97483A152A6AED00818CE3 /* variables_map.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE97482F152A6AED00818CE3 /* variables_map.cpp */; };
 		CE97483B152A6AED00818CE3 /* winmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE974830152A6AED00818CE3 /* winmain.cpp */; };
+		CEA65C1F1A3A2112002A42BD /* genfuzz.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CEA65C1E1A3A2112002A42BD /* genfuzz.cpp */; };
+		CEA65C231A3A2138002A42BD /* ast.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CEA65C221A3A2138002A42BD /* ast.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -106,8 +107,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		CE41EEE5164B23BC0039C08B /* dot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dot.cpp; sourceTree = "<group>"; };
-		CE41EEE8164B23C30039C08B /* dot.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = dot.hpp; sourceTree = "<group>"; };
 		CE41EEE9164B39910039C08B /* expression_formatter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = expression_formatter.cpp; path = ../../adobe_platform_libraries/source/expression_formatter.cpp; sourceTree = "<group>"; };
 		CE4880D4114EEF3900D78CE7 /* binspector */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = binspector; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE71EC8B19EC3E49009BEDEE /* bignum-dtoa.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "bignum-dtoa.cc"; sourceTree = "<group>"; };
@@ -146,6 +145,10 @@
 		CE97482E152A6AED00818CE3 /* value_semantic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = value_semantic.cpp; sourceTree = "<group>"; };
 		CE97482F152A6AED00818CE3 /* variables_map.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = variables_map.cpp; sourceTree = "<group>"; };
 		CE974830152A6AED00818CE3 /* winmain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = winmain.cpp; sourceTree = "<group>"; };
+		CEA65C1E1A3A2112002A42BD /* genfuzz.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = genfuzz.cpp; sourceTree = "<group>"; };
+		CEA65C201A3A211D002A42BD /* genfuzz.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = genfuzz.hpp; sourceTree = "<group>"; };
+		CEA65C211A3A2132002A42BD /* ast.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ast.hpp; sourceTree = "<group>"; };
+		CEA65C221A3A2138002A42BD /* ast.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ast.cpp; sourceTree = "<group>"; };
 		CEBD5D7314F6BCD300A3B5F7 /* adam.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adam.cpp; sourceTree = "<group>"; };
 		CEBD5D7414F6BCD300A3B5F7 /* adam_evaluate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adam_evaluate.cpp; sourceTree = "<group>"; };
 		CEBD5D7514F6BCD300A3B5F7 /* adam_parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adam_parser.cpp; sourceTree = "<group>"; };
@@ -252,12 +255,13 @@
 			isa = PBXGroup;
 			children = (
 				CE94950514FD9FDC00BA35D7 /* analyzer.hpp */,
+				CEA65C211A3A2132002A42BD /* ast.hpp */,
 				CE94950614FD9FDC00BA35D7 /* bitreader.hpp */,
 				CE94950714FD9FDC00BA35D7 /* common.hpp */,
 				CE94950814FD9FDC00BA35D7 /* constant_names.hpp */,
-				CE41EEE8164B23C30039C08B /* dot.hpp */,
 				CE94950914FD9FDC00BA35D7 /* forest.hpp */,
 				CE9747D5152A19D100818CE3 /* fuzzer.hpp */,
+				CEA65C201A3A211D002A42BD /* genfuzz.hpp */,
 				CE9499E3150533DA00BA35D7 /* html_dump.hpp */,
 				CE94950A14FD9FDC00BA35D7 /* interface.hpp */,
 				CE94950B14FD9FDC00BA35D7 /* parser.hpp */,
@@ -286,11 +290,12 @@
 			isa = PBXGroup;
 			children = (
 				CE9747BC152A17FB00818CE3 /* main.cpp */,
+				CEA65C221A3A2138002A42BD /* ast.cpp */,
 				CE94950D14FDA01600BA35D7 /* analyzer.cpp */,
 				CE94950E14FDA01600BA35D7 /* bitreader.cpp */,
 				CE94950F14FDA01600BA35D7 /* common.cpp */,
-				CE41EEE5164B23BC0039C08B /* dot.cpp */,
 				CE974776152A17A600818CE3 /* fuzzer.cpp */,
+				CEA65C1E1A3A2112002A42BD /* genfuzz.cpp */,
 				CE9499E4150533E400BA35D7 /* html_dump.cpp */,
 				CE94951014FDA01600BA35D7 /* interface.cpp */,
 				CE94951114FDA01600BA35D7 /* parser.cpp */,
@@ -507,6 +512,8 @@
 				CE97479B152A17C000818CE3 /* md5.cpp in Sources */,
 				CE97479C152A17C000818CE3 /* memory.cpp in Sources */,
 				CE97479D152A17C000818CE3 /* name.cpp in Sources */,
+				CEA65C231A3A2138002A42BD /* ast.cpp in Sources */,
+				CEA65C1F1A3A2112002A42BD /* genfuzz.cpp in Sources */,
 				CE97479E152A17C000818CE3 /* parser_shared.cpp in Sources */,
 				CE97479F152A17C000818CE3 /* string.cpp in Sources */,
 				CE9747A0152A17C000818CE3 /* string_pool.cpp in Sources */,
@@ -548,7 +555,6 @@
 				CE974839152A6AED00818CE3 /* value_semantic.cpp in Sources */,
 				CE97483A152A6AED00818CE3 /* variables_map.cpp in Sources */,
 				CE97483B152A6AED00818CE3 /* winmain.cpp in Sources */,
-				CE41EEE6164B23BC0039C08B /* dot.cpp in Sources */,
 				CE41EEEA164B39910039C08B /* expression_formatter.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
