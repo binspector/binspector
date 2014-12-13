@@ -53,6 +53,9 @@ public:
 private:
     // inspection related
     inspection_branch_t   new_branch(inspection_branch_t with_parent);
+
+    void                  make_array_element(inspection_branch_t with_parent);
+
     bool                  analyze_with_structure(const structure_type& structure,
                                                  inspection_branch_t   parent);
 
@@ -79,8 +82,13 @@ private:
 
     bool jump_into_structure(const adobe::dictionary_t& field,
                              inspection_branch_t        parent);
+
     template <typename T>
-    T eval_here(const adobe::array_t& expression);
+    T resolve_expression(const adobe::array_t& expression);
+
+    template <typename T>
+    T resolve_expression(const adobe::dictionary_t& field,
+                         adobe::name_t              key);
 
     template <typename T>
     T identifier_lookup(adobe::name_t identifier);

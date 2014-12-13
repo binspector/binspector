@@ -149,6 +149,7 @@
 		CEA65C201A3A211D002A42BD /* genfuzz.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = genfuzz.hpp; sourceTree = "<group>"; };
 		CEA65C211A3A2132002A42BD /* ast.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ast.hpp; sourceTree = "<group>"; };
 		CEA65C221A3A2138002A42BD /* ast.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ast.cpp; sourceTree = "<group>"; };
+		CEA65C241A3B8189002A42BD /* string.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = string.hpp; sourceTree = "<group>"; };
 		CEBD5D7314F6BCD300A3B5F7 /* adam.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adam.cpp; sourceTree = "<group>"; };
 		CEBD5D7414F6BCD300A3B5F7 /* adam_evaluate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adam_evaluate.cpp; sourceTree = "<group>"; };
 		CEBD5D7514F6BCD300A3B5F7 /* adam_parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adam_parser.cpp; sourceTree = "<group>"; };
@@ -265,6 +266,7 @@
 				CE9499E3150533DA00BA35D7 /* html_dump.hpp */,
 				CE94950A14FD9FDC00BA35D7 /* interface.hpp */,
 				CE94950B14FD9FDC00BA35D7 /* parser.hpp */,
+				CEA65C241A3B8189002A42BD /* string.hpp */,
 			);
 			name = headers;
 			path = ../binspector;

@@ -18,6 +18,9 @@
 #include <adobe/array.hpp>
 #include <adobe/string.hpp>
 
+// application
+#include <binspector/string.hpp>
+
 /**************************************************************************************************/
 
 namespace {
@@ -295,6 +298,17 @@ void binspector_parser_t::insert_parser_metadata(adobe::dictionary_t& parameters
 
 /**************************************************************************************************/
 
+adobe::name_t binspector_parser_t::make_lambda_identifier(const char* type, std::size_t id)
+{
+    return adobe::name_t(make_string(current_struct_m.c_str(),
+                                     ":",
+                                     type,
+                                     "_",
+                                     boost::lexical_cast<std::string>(id)).c_str());
+}
+
+/**************************************************************************************************/
+
 bool binspector_parser_t::is_if_scope()
 {
     if (!is_keyword(key_if))
@@ -311,16 +325,7 @@ bool binspector_parser_t::is_if_scope()
     static std::size_t          uid_s(0);
     static const adobe::array_t empty_array_k;
 
-    std::string lambda_identifier;
-
-    // REVISIT (fbrereto) : String concatenation here.
-    lambda_identifier += std::string("<")
-                      + current_struct_m.c_str()
-                      + ":if_"
-                      + boost::lexical_cast<std::string>(++uid_s)
-                      + ">";
-
-    adobe::name_t       identifier(lambda_identifier.c_str());
+    adobe::name_t       identifier(make_lambda_identifier("if", ++uid_s));
     adobe::dictionary_t parameters;
 
     parameters[key_field_if_expression].assign(expression);
@@ -349,16 +354,7 @@ bool binspector_parser_t::is_else_scope()
     static std::size_t          uid_s(0);
     static const adobe::array_t empty_array_k;
 
-    std::string lambda_identifier;
-
-    // REVISIT (fbrereto) : String concatenation here.
-    lambda_identifier += std::string("<")
-                      + current_struct_m.c_str()
-                      + ":else_"
-                      + boost::lexical_cast<std::string>(++uid_s)
-                      + ">";
-
-    adobe::name_t       identifier(lambda_identifier.c_str());
+    adobe::name_t       identifier(make_lambda_identifier("else", ++uid_s));
     adobe::dictionary_t parameters;
 
     parameters[key_field_if_expression].assign(empty_array_k);
@@ -412,16 +408,7 @@ bool binspector_parser_t::is_enum_scope()
     static std::size_t          uid_s(0);
     static const adobe::array_t empty_array_k;
 
-    std::string lambda_identifier;
-
-    // REVISIT (fbrereto) : String concatenation here.
-    lambda_identifier += std::string("<")
-                      + current_struct_m.c_str()
-                      + ":enumerate_"
-                      + boost::lexical_cast<std::string>(++uid_s)
-                      + ">";
-
-    adobe::name_t       identifier(lambda_identifier.c_str());
+    adobe::name_t       identifier(make_lambda_identifier("enumerate", ++uid_s));
     adobe::dictionary_t parameters;
 
     parameters[key_enumerated_expression].assign(expression);
@@ -472,10 +459,8 @@ bool binspector_parser_t::is_enum_list_item_set()
         return false;
 
     while (is_token(adobe::comma_k))
-    {
-            if (!is_enum_list_item())
+        if (!is_enum_list_item())
             throw_exception("Expected an enumerate list item after the comma");
-    }
 
     return true;
 }
@@ -492,16 +477,7 @@ bool binspector_parser_t::is_enum_list_item()
     static std::size_t          uid_s(0);
     static const adobe::array_t empty_array_k;
 
-    std::string lambda_identifier;
-
-    // REVISIT (fbrereto) : String concatenation here.
-    lambda_identifier += std::string("<")
-                      + current_struct_m.c_str()
-                      + ":enumerate_list_option_"
-                      + boost::lexical_cast<std::string>(++uid_s)
-                      + ">";
-
-    adobe::name_t       identifier(lambda_identifier.c_str());
+    adobe::name_t       identifier(make_lambda_identifier("list_option", ++uid_s));
     adobe::dictionary_t parameters;
 
     parameters[key_enumerated_option_expression].assign(expression);
@@ -567,16 +543,7 @@ bool binspector_parser_t::is_enum_map_item()
     static std::size_t          uid_s(0);
     static const adobe::array_t empty_array_k;
 
-    std::string lambda_identifier;
-
-    // REVISIT (fbrereto) : String concatenation here.
-    lambda_identifier += std::string("<")
-                      + current_struct_m.c_str()
-                      + ":enumerate_map_option_"
-                      + boost::lexical_cast<std::string>(++uid_s)
-                      + ">";
-
-    adobe::name_t       identifier(lambda_identifier.c_str());
+    adobe::name_t       identifier(make_lambda_identifier("map_option", ++uid_s));
     adobe::dictionary_t parameters;
 
     parameters[key_enumerated_option_expression].assign(expression);
@@ -606,16 +573,7 @@ bool binspector_parser_t::is_enum_map_default()
     static std::size_t          uid_s(0);
     static const adobe::array_t empty_array_k;
 
-    std::string lambda_identifier;
-
-    // REVISIT (fbrereto) : String concatenation here.
-    lambda_identifier += std::string("<")
-                      + current_struct_m.c_str()
-                      + ":enumerate_default_"
-                      + boost::lexical_cast<std::string>(++uid_s)
-                      + ">";
-
-    adobe::name_t       identifier(lambda_identifier.c_str());
+    adobe::name_t       identifier(make_lambda_identifier("default", ++uid_s));
     adobe::dictionary_t parameters;
 
     parameters[key_field_name].assign(identifier);
@@ -649,16 +607,7 @@ bool binspector_parser_t::is_sentry_scope()
     static std::size_t          uid_s(0);
     static const adobe::array_t empty_array_k;
 
-    std::string lambda_identifier;
-
-    // REVISIT (fbrereto) : String concatenation here.
-    lambda_identifier += std::string("<")
-                      + current_struct_m.c_str()
-                      + ":sentry_"
-                      + boost::lexical_cast<std::string>(++uid_s)
-                      + ">";
-
-    adobe::name_t       identifier(lambda_identifier.c_str());
+    adobe::name_t       identifier(make_lambda_identifier("sentry", ++uid_s));
     adobe::dictionary_t parameters;
 
     parameters[key_sentry_expression].assign(expression);
@@ -1144,8 +1093,8 @@ bool binspector_parser_t::is_pp_include()
 
     // REVISIT (fbrereto) : A std::string to a c-string to a std::string to a... c'mon.
     if (!exists(parsepath))
-        throw_exception(adobe::make_string("Could not find requested include file: ",
-                                           value_str.c_str()).c_str());
+        throw_exception(make_string("Could not find requested include file: ",
+                                    value_str.c_str()).c_str());
 
     // check if file has already been parsed and added to the AST.
     if (adobe::find(included_file_set_m, parsepath) != included_file_set_m.end())

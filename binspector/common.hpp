@@ -247,6 +247,18 @@ std::vector<T> homogeneous_regular_cast(const adobe::any_regular_t& regular)
 }
 
 /**************************************************************************************************/
+// any_regular's serialization has always been... funny. Gotta find a better
+// way to get values serialized than this kind of glue.
+inline std::string serialize(const adobe::any_regular_t& x)
+{
+    std::stringstream ugh;
+
+    ugh << x;
+
+    return ugh.str();
+}
+
+/**************************************************************************************************/
 
 // BINSPECTOR_COMMON_HPP
 #endif

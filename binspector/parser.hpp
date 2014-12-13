@@ -151,6 +151,9 @@ private:
     // utility routine to add parser metadata to the AST node
     void insert_parser_metadata(adobe::dictionary_t& parameters);
 
+    // identifier generation routine for nameless nodes (if, else, sentry, etc.)
+    adobe::name_t make_lambda_identifier(const char* type, std::size_t id);
+
     include_directory_set_t  include_directory_set_m;
     included_file_set_t      included_file_set_m;
     set_structure_proc_t     set_structure_proc_m;

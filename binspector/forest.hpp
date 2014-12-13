@@ -36,6 +36,9 @@ enum node_flags_t
 
     /* atom flags */
     atom_is_big_endian_k = 1 << 7UL,
+
+    /* genfuzz flags */
+    genfuzz_immutable_k  = 1 << 8UL,
 };
 
 ADOBE_DEFINE_BITSET_OPS(node_flags_t);

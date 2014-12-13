@@ -15,6 +15,9 @@
 #include <adobe/implementation/token.hpp>
 #include <adobe/string.hpp>
 
+// application
+#include <binspector/string.hpp>
+
 /**************************************************************************************************/
 
 namespace {
@@ -31,18 +34,6 @@ inline void transfer_field(adobe::dictionary_t&       dst,
         throw std::runtime_error("Key transfer failed");
 
     dst[key].assign(found->second);
-}
-
-/**************************************************************************************************/
-// any_regular's serialization has always been... funny. Gotta find a better
-// way to get values serialized than this kind of glue.
-inline std::string serialize(const adobe::any_regular_t& x)
-{
-    std::stringstream ugh;
-
-    ugh << x;
-
-    return ugh.str();
 }
 
 /**************************************************************************************************/
@@ -105,16 +96,7 @@ binspector_analyzer_t::binspector_analyzer_t(std::istream& binary_file,
 bool binspector_analyzer_t::jump_into_structure(adobe::name_t       structure_name,
                                                 inspection_branch_t parent)
 {
-    bool result = analyze_with_structure(ast_m.structure_for(structure_name), parent);
-
-#if 0
-    if (!adobe::has_children(parent))
-    {
-        std::cerr << "node with zero kids: " << parent->name_m << '\n';
-    }
-#endif
-
-    return result;
+    return analyze_with_structure(ast_m.structure_for(structure_name), parent);
 }
 
 /**************************************************************************************************/
@@ -156,8 +138,20 @@ inspection_branch_t binspector_analyzer_t::new_branch(inspection_branch_t with_p
 
 /**************************************************************************************************/
 
+void binspector_analyzer_t::make_array_element(inspection_branch_t with_parent)
+{
+    inspection_branch_t array_element_branch(new_branch(with_parent));
+    forest_node_t&      array_element_data(*array_element_branch);
+
+    array_element_data.set_flag(is_array_element_k);
+    array_element_data.cardinal_m = with_parent->cardinal_m++;
+    array_element_data.location_m = make_location(with_parent->bit_count_m);
+}
+
+/**************************************************************************************************/
+
 template <typename T>
-T binspector_analyzer_t::eval_here(const adobe::array_t& expression)
+T binspector_analyzer_t::resolve_expression(const adobe::array_t& expression)
 {
     restore_point_t restore_point(input_m);
 
@@ -167,9 +161,16 @@ T binspector_analyzer_t::eval_here(const adobe::array_t& expression)
 
 // specialization because double doesn't always implicitly convert to boost::uint64_t
 template <>
-boost::uint64_t binspector_analyzer_t::eval_here(const adobe::array_t& expression)
+boost::uint64_t binspector_analyzer_t::resolve_expression(const adobe::array_t& expression)
 {
-    return static_cast<boost::uint64_t>(eval_here<double>(expression));
+    return static_cast<boost::uint64_t>(resolve_expression<double>(expression));
+}
+
+template <typename T>
+T binspector_analyzer_t::resolve_expression(const adobe::dictionary_t& field,
+                                            adobe::name_t              key)
+{
+    return resolve_expression<T>(value_for<adobe::array_t>(field, key));
 }
 
 /**************************************************************************************************/
@@ -179,22 +180,18 @@ void binspector_analyzer_t::signal_end_of_file()
     // If this is true then we've reached eof once already and are continuing to
     // try and read the file. As such be a little more draconian: throw.
     if (eof_signalled_m)
-        throw std::runtime_error("EOF reached. Consider using the eof slot.");
+        throw std::runtime_error("EOF exceeded. Consider using the eof slot.");
 
     eof_signalled_m = true;
 
     try
     {
-        adobe::array_t expression;
+        inspection_branch_t slot(identifier_lookup<inspection_branch_t>("eof"_name));
 
-        expression.push_back(adobe::any_regular_t("eof"_name));
-        expression.push_back(adobe::any_regular_t(adobe::variable_k));
-
-        inspection_branch_t slot(eval_here<inspection_branch_t>(expression));
-
-        // actually update the slot with a new expression and clear the cache
-        slot->expression_m = adobe::array_t(1, adobe::any_regular_t(true));
-        slot->evaluated_m = false;
+        // No need to set a lazy expression, just set the true flag and move on.
+        slot->expression_m.clear();
+        slot->evaluated_value_m.assign(true);
+        slot->evaluated_m = true;
     }
     catch(...)
     { }
@@ -210,7 +207,7 @@ T binspector_analyzer_t::identifier_lookup(adobe::name_t identifier)
     expression.push_back(adobe::any_regular_t(identifier));
     expression.push_back(adobe::any_regular_t(adobe::variable_k));
 
-    return eval_here<T>(expression);
+    return resolve_expression<T>(expression);
 }
 
 /**************************************************************************************************/
@@ -281,9 +278,7 @@ try
             }
             else // conditional_type == if_k
             {
-                const adobe::array_t& if_expression(value_for<adobe::array_t>(field, key_field_if_expression));
-
-                last_conditional_value = eval_here<bool>(if_expression);
+                last_conditional_value = resolve_expression<bool>(field, key_field_if_expression);
             }
 
             if (last_conditional_value)
@@ -292,7 +287,7 @@ try
                 // on that came in - this will add the conditional block's items
                 // to the parent, flattening out the conditional.
 
-                if (jump_into_structure(field, parent) == false)
+                if (!jump_into_structure(field, parent))
                     return false;
             }
 
@@ -301,21 +296,17 @@ try
         }
         else if (type == value_field_type_invariant)
         {
-            const adobe::array_t& expression(value_for<adobe::array_t>(field, key_field_assign_expression));
-            bool                  holds(eval_here<bool>(expression));
-
-            if (!holds)
-                throw std::runtime_error(adobe::make_string("invariant '",
-                                                            name.c_str(),
-                                                            "' failed to hold."));
+            if (!resolve_expression<bool>(field, key_field_assign_expression))
+                throw std::runtime_error(make_string("invariant '",
+                                                     name.c_str(),
+                                                     "' failed to hold."));
 
             continue;
         }
         else if (type == value_field_type_enumerated)
         {
-            const adobe::array_t& branch_expression(value_for<adobe::array_t>(field, key_enumerated_expression));
-            inspection_branch_t   atom(eval_here<inspection_branch_t>(branch_expression));
-            adobe::any_regular_t  value;
+            inspection_branch_t  atom(resolve_expression<inspection_branch_t>(field, key_enumerated_expression));
+            adobe::any_regular_t value;
 
             {
             restore_point_t restore_point(input_m);
@@ -327,7 +318,7 @@ try
             temp_assignment<bool>                 enumerated_found(current_enumerated_found_m, false);
             temp_assignment<adobe::array_t>       enumerated_option_set(current_enumerated_option_set_m, adobe::array_t());
 
-            if (jump_into_structure(field, parent) == false)
+            if (!jump_into_structure(field, parent))
                 return false;
 
             if (current_enumerated_found_m)
@@ -353,55 +344,47 @@ try
             }
             else
             {
-                std::string error;
-                
-                // REVISIT (fbrereto) : We have to have a cleaner solution than
-                //                      this kind of concatenation...
-                error += "value for "
-                      + build_path(atom)
-                      + " is not enumerated ("
-                      + serialize(value)
-                      + ")";
-
-                throw std::runtime_error(error);
+                throw std::runtime_error(make_string("value for ",
+                                                     build_path(atom),
+                                                     " is not enumerated (",
+                                                     serialize(value),
+                                                     ")"));
             }
 
             continue;
         }
         else if (type == value_field_type_enumerated_option)
         {
-            const adobe::array_t& expression(value_for<adobe::array_t>(field, key_enumerated_option_expression));
-            adobe::any_regular_t  option_value(eval_here<adobe::any_regular_t>(expression));
+            current_enumerated_option_set_m.push_back(resolve_expression<adobe::any_regular_t>(field, key_enumerated_option_expression));
 
-            current_enumerated_option_set_m.push_back(option_value);
-
-            if (option_value == current_enumerated_value_m)
+            if (current_enumerated_option_set_m.back() == current_enumerated_value_m)
             {
-                if (jump_into_structure(field, parent) == false)
+                if (!jump_into_structure(field, parent))
                     return false;
 
                 current_enumerated_found_m = true;
             }
+
+            // if we have found our enumerated option we are DONE done; no continue.
+            if (current_enumerated_found_m)
+                return true;
 
             continue;
         }
         else if (type == value_field_type_enumerated_default)
         {
-            if (!current_enumerated_found_m)
-            {
-                if (jump_into_structure(field, parent) == false)
-                    return false;
+            if (!jump_into_structure(field, parent))
+                return false;
 
-                current_enumerated_found_m = true;
-            }
+            current_enumerated_found_m = true;
 
-            continue;
+            // Since we have hit the default we are DONE done; no continue.
+            return true;
         }
         else if (type == value_field_type_sentry)
         {
-            const adobe::array_t& expression(value_for<adobe::array_t>(field, key_sentry_expression));
-            adobe::any_regular_t  sentry_value(eval_here<adobe::any_regular_t>(expression));
-            bitreader_t::pos_t    sentry_position;
+            adobe::any_regular_t sentry_value(resolve_expression<adobe::any_regular_t>(field, key_sentry_expression));
+            bitreader_t::pos_t   sentry_position;
 
             // Values of type double are relative to the current input position;
             // values of type pos_t are absolute.
@@ -419,7 +402,7 @@ try
 
             // std::cerr << "! sentry set to " << sentry_position << '\n';
 
-            if (jump_into_structure(field, parent) == false)
+            if (!jump_into_structure(field, parent))
                 return false;
             }
 
@@ -436,21 +419,7 @@ try
                         << sentry_position
                         << " but instead is "
                         << input_m.pos()
-                        << ".";
-
-#if 0
-                error_m << " Position forced!";
-
-                // In the event the sentry is violated, put the read head
-                // where it is expected. This will give us our best chance
-                // at being able to continue reading the file without
-                // further issue. This means we're trusting the length
-                // prefixes in a document more than the actual data that's
-                // in there, which is philosophically debatable, I'm sure.
-                input_m.seek(sentry_position);
-#endif
-
-                error_m << '\n';
+                        << ".\n";
             }
 
             continue;
@@ -462,9 +431,8 @@ try
             if (quiet_m)
                 continue;
 
-            const adobe::array_t& expression(value_for<adobe::array_t>(field, key_notify_expression));
-            adobe::array_t        argument_set(eval_here<adobe::array_t>(expression));
-            std::stringstream     result;
+            adobe::array_t    argument_set(resolve_expression<adobe::array_t>(field, key_notify_expression));
+            std::stringstream result;
 
             adobe::copy(argument_set, std::ostream_iterator<adobe::any_regular_t>(result));
 
@@ -479,9 +447,8 @@ try
             if (quiet_m)
                 continue;
 
-            const adobe::array_t& expression(value_for<adobe::array_t>(field, key_summary_expression));
-            adobe::array_t        argument_set(eval_here<adobe::array_t>(expression));
-            std::stringstream     result;
+            adobe::array_t    argument_set(resolve_expression<adobe::array_t>(field, key_summary_expression));
+            std::stringstream result;
 
             adobe::copy(argument_set, std::ostream_iterator<adobe::any_regular_t>(result));
 
@@ -491,9 +458,8 @@ try
         }
         else if (type == value_field_type_die)
         {
-            const adobe::array_t& expression(value_for<adobe::array_t>(field, key_die_expression));
-            adobe::array_t        argument_set(eval_here<adobe::array_t>(expression));
-            std::stringstream     result;
+            adobe::array_t    argument_set(resolve_expression<adobe::array_t>(field, key_die_expression));
+            std::stringstream result;
 
             result << "die: ";
 
@@ -540,8 +506,8 @@ try
             else if (type == value_field_type_slot)
                 branch_data.set_flag(type_slot_k);
             else
-                throw std::runtime_error(adobe::make_string("analysis error: unknown type: ",
-                                                            type.c_str()));
+                throw std::runtime_error(make_string("analysis error: unknown type: ",
+                                                     type.c_str()));
     
             if (type == value_field_type_const)
             {
@@ -554,7 +520,7 @@ try
             {
                 // skip is different in that its parameter is unit BYTES not bits
                 const adobe::array_t& skip_expression(value_for<adobe::array_t>(field, key_skip_expression));
-                boost::uint64_t       byte_count(static_cast<boost::uint64_t>(eval_here<double>(skip_expression)));
+                boost::uint64_t       byte_count(static_cast<boost::uint64_t>(resolve_expression<double>(skip_expression)));
     
                 branch_data.start_offset_m = input_m.pos();
     
@@ -597,7 +563,7 @@ try
                 // if our field's data is not at the next immediate offset,
                 // temporarily set the position marker to that offset location
                 // and restore it later.
-                adobe::any_regular_t  offset_value(eval_here<adobe::any_regular_t>(offset_expression));
+                adobe::any_regular_t  offset_value(resolve_expression<adobe::any_regular_t>(offset_expression));
                 inspection_position_t offset;
 
                 if (offset_value.type_info() == typeid(double))
@@ -620,9 +586,7 @@ try
     
             if (type == value_field_type_struct)
             {
-                adobe::name_t struct_name(value_for<adobe::name_t>(field, key_named_type_name));
-    
-                branch_data.struct_name_m = struct_name;
+                branch_data.struct_name_m = value_for<adobe::name_t>(field, key_named_type_name);
     
                 if (has_size_expression)
                 {
@@ -633,7 +597,7 @@ try
     
                     if (field_size_type == field_size_while_k)
                     {
-                        while (eval_here<bool>(field_size_expression))
+                        while (resolve_expression<bool>(field_size_expression))
                         {
                             inspection_branch_t array_element_branch(new_branch(sub_branch));
                             forest_node_t&      array_element_data(*array_element_branch);
@@ -641,7 +605,7 @@ try
                             array_element_data.set_flag(is_array_element_k);
                             array_element_data.cardinal_m = branch_data.cardinal_m++;
     
-                            if (jump_into_structure(struct_name, array_element_branch) == false)
+                            if (!jump_into_structure(branch_data.struct_name_m, array_element_branch))
                                 return false;
     
                             // We keep the end offset up to date because it
@@ -651,7 +615,7 @@ try
                     }
                     else if (field_size_type == field_size_integer_k)
                     {
-                        double size_count_double(eval_here<double>(field_size_expression));
+                        double size_count_double(resolve_expression<double>(field_size_expression));
     
                         if (size_count_double < 0)
                             throw std::runtime_error("Negative bounds size for array");
@@ -666,17 +630,17 @@ try
                             array_element_data.set_flag(is_array_element_k);
                             array_element_data.cardinal_m = branch_data.cardinal_m++;
     
-                            if (jump_into_structure(struct_name, array_element_branch) == false)
+                            if (!jump_into_structure(branch_data.struct_name_m, array_element_branch))
                                 return false;
                         }
+
+                        // One final update to the root's end offset should does the trick
+                        branch_data.end_offset_m = input_m.pos() - inspection_byte_k;
                     }
-    
-                    // One final update to the root's end offset should does the trick
-                    branch_data.end_offset_m = input_m.pos() - inspection_byte_k;
                 }
                 else // singleton
                 {
-                    if (jump_into_structure(struct_name, sub_branch) == false)
+                    if (!jump_into_structure(branch_data.struct_name_m, sub_branch))
                         return false;
                 }
             }
@@ -684,9 +648,9 @@ try
             {
                 const adobe::array_t& bit_count_expression(value_for<adobe::array_t>(field, key_atom_bit_count_expression));
                 const adobe::array_t& is_big_endian_expression(value_for<adobe::array_t>(field, key_atom_is_big_endian_expression));
-                bool                  is_big_endian(eval_here<bool>(is_big_endian_expression));
+                bool                  is_big_endian(resolve_expression<bool>(is_big_endian_expression));
     
-                branch_data.bit_count_m = static_cast<boost::uint64_t>(eval_here<double>(bit_count_expression));
+                branch_data.bit_count_m = static_cast<boost::uint64_t>(resolve_expression<double>(bit_count_expression));
                 branch_data.type_m = value_for<atom_base_type_t>(field, key_atom_base_type);
                 branch_data.set_flag(atom_is_big_endian_k, is_big_endian);
     
@@ -700,20 +664,20 @@ try
                     if (field_size_type == field_size_delimiter_k)
                     {
                         /*
-                            There is an issue here this code addresses which makes it more complicated,
-                            and I'm not sure if it's necessary but I'm keeping it in. The problem is that
-                            the delimiter you are interested in may not exist in the file aligned to the
-                            current read boundary you have... for example a 16-bit delimiter cannot be
-                            found by simply reading 16 bits at a time and then comparing because you
-                            might read the two halves of the 16 bit value over the course of two
-                            consecutive reads and fail both times. As such we have to read in the data
-                            and push it into a "sliding window" that is the size of the delimiter we
-                            are looking for and do the comparisons that way. It's much slower and the
-                            language might benefit from the user being able to guarantee the alignment
-                            of the values we are looking for, in which case we can improve the
-                            performance here.
+                        There is an issue here this code addresses which makes it more complicated,
+                        and I'm not sure if it's necessary but I'm keeping it in. The problem is that
+                        the delimiter you are interested in may not exist in the file aligned to the
+                        current read boundary you have... for example a 16-bit delimiter cannot be
+                        found by simply reading 16 bits at a time and then comparing because you
+                        might read the two halves of the 16 bit value over the course of two
+                        consecutive reads and fail both times. As such we have to read in the data
+                        and push it into a "sliding window" that is the size of the delimiter we
+                        are looking for and do the comparisons that way. It's much slower and the
+                        language might benefit from the user being able to guarantee the alignment
+                        of the values we are looking for, in which case we can improve the
+                        performance here.
                         */
-                        boost::uint64_t     delimiter(eval_here<boost::uint64_t>(field_size_expression));
+                        boost::uint64_t     delimiter(resolve_expression<boost::uint64_t>(field_size_expression));
                         boost::uint64_t     delimiter_byte_count(std::max<std::size_t>(1, highest_byte_for(delimiter)));
                         std::size_t         delimiter_bit_count(static_cast<std::size_t>(delimiter_byte_count * 8));
                         boost::uint64_t     running_count(0);
@@ -755,18 +719,11 @@ try
                         }
 
                         for (boost::uint64_t i(0); i < running_count; ++i)
-                        {
-                            inspection_branch_t array_element_branch(new_branch(sub_branch));
-                            forest_node_t&      array_element_data(*array_element_branch);
-    
-                            array_element_data.set_flag(is_array_element_k);
-                            array_element_data.cardinal_m = branch_data.cardinal_m++;
-                            array_element_data.location_m = make_location(branch_data.bit_count_m);
-                        }
+                            make_array_element(sub_branch);
                     }
                     else if (field_size_type == field_size_terminator_k)
                     {
-                        boost::uint64_t terminator(eval_here<boost::uint64_t>(field_size_expression));
+                        boost::uint64_t terminator(resolve_expression<boost::uint64_t>(field_size_expression));
                         boost::uint8_t  read_size(static_cast<boost::uint8_t>(bytesize(branch_data.bit_count_m)));
                         boost::uint8_t  read_size_leftovers(bitsize(branch_data.bit_count_m));
                         boost::uint64_t running_count(0);
@@ -805,30 +762,16 @@ try
                         }
 
                         for (boost::uint64_t i(0); i < running_count; ++i)
-                        {
-                            inspection_branch_t array_element_branch(new_branch(sub_branch));
-                            forest_node_t&      array_element_data(*array_element_branch);
-    
-                            array_element_data.set_flag(is_array_element_k);
-                            array_element_data.cardinal_m = branch_data.cardinal_m++;
-                            array_element_data.location_m = make_location(branch_data.bit_count_m);
-                        }
+                            make_array_element(sub_branch);
                     }
                     else if (field_size_type == field_size_while_k)
                     {
-                        while (eval_here<bool>(field_size_expression))
-                        {
-                            inspection_branch_t array_element_branch(new_branch(sub_branch));
-                            forest_node_t&      array_element_data(*array_element_branch);
-    
-                            array_element_data.set_flag(is_array_element_k);
-                            array_element_data.cardinal_m = branch_data.cardinal_m++;
-                            array_element_data.location_m = make_location(branch_data.bit_count_m);
-                        }
+                        while (resolve_expression<bool>(field_size_expression))
+                            make_array_element(sub_branch);
                     }
                     else if (field_size_type == field_size_integer_k)
                     {
-                        double size_count_double(eval_here<double>(field_size_expression));
+                        double size_count_double(resolve_expression<double>(field_size_expression));
     
                         if (size_count_double < 0)
                             throw std::runtime_error("Negative bounds size for array");
@@ -836,14 +779,7 @@ try
                         std::size_t size_count(static_cast<std::size_t>(size_count_double));
     
                         while (branch_data.cardinal_m != size_count)
-                        {
-                            inspection_branch_t array_element_branch(new_branch(sub_branch));
-                            forest_node_t&      array_element_data(*array_element_branch);
-    
-                            array_element_data.set_flag(is_array_element_k);
-                            array_element_data.cardinal_m = branch_data.cardinal_m++;
-                            array_element_data.location_m = make_location(branch_data.bit_count_m);
-                        }
+                            make_array_element(sub_branch);
                     }
     
                     // One final update to the root's end offset should does the trick
@@ -865,20 +801,16 @@ try
                         value = finalize_lookup<double>(forest_m->begin(), sub_branch, input_m, true);
                         }
 
-                        std::vector<double> atom_invariant_set(homogeneous_regular_cast<double>(eval_here<adobe::any_regular_t>(atom_invariant_expression)));
+                        std::vector<double> atom_invariant_set(homogeneous_regular_cast<double>(resolve_expression<adobe::any_regular_t>(atom_invariant_expression)));
 
                         if (adobe::find(atom_invariant_set, value) == end(atom_invariant_set))
                         {
-                            std::string error;
-
-                            error += build_path(sub_branch)
-                                  +  " invariant (expected: "
-                                  // +  boost::lexical_cast<std::string>(atom_invariant)
-                                  +  ", found: "
-                                  +  boost::lexical_cast<std::string>(value)
-                                  +  ")";
-
-                            throw std::runtime_error(error);
+                            throw std::runtime_error(make_string(build_path(sub_branch),
+                                                                 " invariant (expected: ",
+                                                                 "?", // boost::lexical_cast<std::string>(atom_invariant),
+                                                                 ", found: ",
+                                                                 boost::lexical_cast<std::string>(value),
+                                                                 ")"));
                         }
                     }
                 }
@@ -974,8 +906,8 @@ adobe::dictionary_t typedef_lookup(const typedef_map_t&       typedef_map,
         }
         else
         {
-            throw std::runtime_error(adobe::make_string("Typedef lookup failure: don't know what to do with entries of type ",
-                                                        type.c_str()));
+            throw std::runtime_error(make_string("Typedef lookup failure: don't know what to do with entries of type ",
+                                                 type.c_str()));
         }
     }
 
