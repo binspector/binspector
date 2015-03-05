@@ -33,7 +33,7 @@ cd ..
 if [ ! -e 'double-conversion' ]; then
     echo "INFO : double-conversion not found: setting up."
 
-    echo_run git clone --branch=master --single-branch --depth=1 https://github.com/stlab/double-conversion.git
+    echo_run git clone --branch=master --depth=1 https://github.com/stlab/double-conversion.git
 else
     echo "INFO : double-conversion found: skipping setup."
 fi
@@ -41,7 +41,7 @@ fi
 if [ ! -e 'adobe_source_libraries' ]; then
     echo "INFO : adobe_source_libraries not found: setting up."
 
-    echo_run git clone --branch=master --single-branch --depth=1 https://github.com/stlab/adobe_source_libraries.git
+    echo_run git clone --branch=master --depth=1 https://github.com/stlab/adobe_source_libraries.git
 else
     echo "INFO : adobe_source_libraries found: skipping setup."
 fi
@@ -49,7 +49,7 @@ fi
 if [ ! -e 'adobe_platform_libraries' ]; then
     echo "INFO : adobe_platform_libraries not found: setting up."
 
-    echo_run git clone --branch=master --single-branch --depth=1 https://github.com/stlab/adobe_platform_libraries.git
+    echo_run git clone --branch=master --depth=1 https://github.com/stlab/adobe_platform_libraries.git
 else
     echo "INFO : adobe_platform_libraries found: skipping setup."
 fi
