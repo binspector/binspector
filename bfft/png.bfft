@@ -106,6 +106,8 @@ struct chrm_t
     unsigned 32 big green_y;
     unsigned 32 big blue_x;
     unsigned 32 big blue_y;
+
+    const summary_str = 'cHRM' noprint;
 }
 
 struct trns_t
@@ -148,7 +150,7 @@ struct iend_t
 
 struct unimplemented_t
 {
-    const summary_str = strcat(type_str, ' skipped') noprint;
+    const summary_str = strcat(type_str, ' (skipped)') noprint;
 
     if (length != 0)
         skip unimplemented[length];
