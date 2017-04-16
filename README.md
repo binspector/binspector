@@ -2,6 +2,8 @@
 
 # What is Binspector?
 
+[![Join the chat at https://gitter.im/binspector/binspector](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/binspector/binspector?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Binspector and its related language are built around the idea of exposing the guts of binary formats and files so plain old humans can grok them better.
 
 Specifically there are two pieces that accomplish this:
