@@ -19,7 +19,8 @@
 void fuzz(const inspection_forest_t&     forest,
           const boost::filesystem::path& input_path,
           const boost::filesystem::path& output_root,
-          bool                           path_hash);
+          bool                           path_hash,
+          bool                           recurse);
 
 /****************************************************************************************************/
 // BINSPECTOR_FUZZER_HPP
