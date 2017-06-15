@@ -106,6 +106,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		CE1BD2811EF2FA86004CA2CE /* binspector.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = binspector.xcconfig; sourceTree = "<group>"; };
 		CE41EEE5164B23BC0039C08B /* dot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dot.cpp; sourceTree = "<group>"; };
 		CE41EEE8164B23C30039C08B /* dot.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = dot.hpp; sourceTree = "<group>"; };
 		CE41EEE9164B39910039C08B /* expression_formatter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = expression_formatter.cpp; path = ../../adobe_platform_libraries/source/expression_formatter.cpp; sourceTree = "<group>"; };
@@ -217,12 +218,21 @@
 		08FB7794FE84155DC02AAC07 /* huffman */ = {
 			isa = PBXGroup;
 			children = (
+				CE1BD2801EF2FA79004CA2CE /* config */,
 				CE4886AE1152D09600D78CE7 /* headers */,
 				CE94950C14FDA01600BA35D7 /* sources */,
 				CE48817D114FE5DA00D78CE7 /* third party sources */,
 				CE4880D5114EEF3900D78CE7 /* Products */,
 			);
 			name = huffman;
+			sourceTree = "<group>";
+		};
+		CE1BD2801EF2FA79004CA2CE /* config */ = {
+			isa = PBXGroup;
+			children = (
+				CE1BD2811EF2FA86004CA2CE /* binspector.xcconfig */,
+			);
+			name = config;
 			sourceTree = "<group>";
 		};
 		CE4880D5114EEF3900D78CE7 /* Products */ = {
@@ -559,77 +569,26 @@
 		1DEB923208733DC60010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = binspector;
 			};
 			name = Debug;
 		};
 		1DEB923308733DC60010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = binspector;
 			};
 			name = Release;
 		};
 		1DEB923608733DC60010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE1BD2811EF2FA86004CA2CE /* binspector.xcconfig */;
 			buildSettings = {
-				ADOBE_OPENSOURCE_ROOT = ../../;
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
-				CLANG_CXX_LIBRARY = "libc++";
-				GCC_AUTO_VECTORIZATION = YES;
-				GCC_C_LANGUAGE_STANDARD = c99;
-				GCC_ENABLE_SSE3_EXTENSIONS = YES;
-				GCC_ENABLE_SSE41_EXTENSIONS = YES;
-				GCC_ENABLE_SSE42_EXTENSIONS = YES;
-				GCC_ENABLE_SUPPLEMENTAL_SSE3_INSTRUCTIONS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = "ADOBE_STD_SERIALIZATION=1";
-				GCC_UNROLL_LOOPS = YES;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				HEADER_SEARCH_PATHS = (
-					../,
-					"$(ADOBE_OPENSOURCE_ROOT)boost_libraries",
-					"$(ADOBE_OPENSOURCE_ROOT)adobe_source_libraries",
-					"$(ADOBE_OPENSOURCE_ROOT)adobe_platform_libraries",
-					"$(ADOBE_OPENSOURCE_ROOT)",
-				);
-				PREBINDING = NO;
-				SYMROOT = ../../built_artifacts;
 			};
 			name = Debug;
 		};
 		1DEB923708733DC60010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE1BD2811EF2FA86004CA2CE /* binspector.xcconfig */;
 			buildSettings = {
-				ADOBE_OPENSOURCE_ROOT = ../../;
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
-				CLANG_CXX_LIBRARY = "libc++";
-				GCC_AUTO_VECTORIZATION = YES;
-				GCC_C_LANGUAGE_STANDARD = c99;
-				GCC_ENABLE_SSE3_EXTENSIONS = YES;
-				GCC_ENABLE_SSE41_EXTENSIONS = YES;
-				GCC_ENABLE_SSE42_EXTENSIONS = YES;
-				GCC_ENABLE_SUPPLEMENTAL_SSE3_INSTRUCTIONS = YES;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"ADOBE_STD_SERIALIZATION=1",
-					"NDEBUG=1",
-				);
-				GCC_UNROLL_LOOPS = YES;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				HEADER_SEARCH_PATHS = (
-					../,
-					"$(ADOBE_OPENSOURCE_ROOT)boost_libraries",
-					"$(ADOBE_OPENSOURCE_ROOT)adobe_source_libraries",
-					"$(ADOBE_OPENSOURCE_ROOT)adobe_platform_libraries",
-					"$(ADOBE_OPENSOURCE_ROOT)",
-				);
-				PREBINDING = NO;
-				SYMROOT = ../../built_artifacts;
 			};
 			name = Release;
 		};
