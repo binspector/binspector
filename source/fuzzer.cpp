@@ -23,6 +23,7 @@
 // asl
 #include <adobe/string.hpp>
 #include <adobe/iomanip_asl_cel.hpp>
+#include <adobe/fnv.hpp>
 
 // application
 #include <binspector/analyzer.hpp>
@@ -31,6 +32,17 @@
 /****************************************************************************************************/
 
 namespace {
+
+template <typename T>
+std::string to_string_fmt(const T& x, const char* fmt) {
+    auto n(std::snprintf(nullptr, 0, fmt, x));
+
+    std::vector<char> buf(++n); // +1 for terminator
+
+    std::snprintf(&buf[0], buf.size(), fmt, x);
+
+    return std::string(&buf[0]); // REVISIT (fbrereto) : Eliminate the vector -> string copy
+}
 
 /****************************************************************************************************/
 
@@ -266,7 +278,8 @@ inline void rawbytes_out(std::ofstream& output, const rawbytes_t& data)
 struct fuzzer_t
 {
     fuzzer_t(const boost::filesystem::path& input_path,
-             const boost::filesystem::path& output_root);
+             const boost::filesystem::path& output_root,
+             bool                           path_hash);
 
     void fuzz(const inspection_forest_t& forest);
 
@@ -293,6 +306,7 @@ private:
     std::string                 basename_m;
     std::string                 extension_m;
     boost::filesystem::ofstream output_m; // summary output
+    bool                        path_hash_m;
 };
 
 /****************************************************************************************************/
@@ -309,10 +323,14 @@ std::size_t fuzzer_t::fuzz_location_with(const inspection_position_t& location,
         return 0;
     }
 
-    std::string cur_name(basename_m);
-    
+    std::string attack_id = basename_m + "_" + serialize(location);
+
+    if (path_hash_m) {
+        attack_id = to_string_fmt(adobe::fnv1a<64>(attack_id), "%llx");
+    }
+
     // REVISIT (fbrereto) : String concatenation here.
-    cur_name += "_" + serialize(location) + "_" + generator.identifier() + extension_m;
+    std::string cur_name = attack_id + "_" + generator.identifier() + extension_m;
 
     boost::filesystem::path output_path(base_output_path_m / cur_name);
 
@@ -429,6 +447,7 @@ std::size_t fuzzer_t::fuzz_shuffle_set_with(const node_set_t& node_set)
     rawbytes_t file_suffix(input.read(endpos + inspection_byte_k,
                                       input.size() - inspection_byte_k));
 
+    // why am I doing this?
     basename_m += "_" + boost::lexical_cast<std::string>(startpos.bytes());
 
     // std::cerr << "prefix is : " << file_prefix.size() << '\n';
@@ -625,12 +644,14 @@ boost::filesystem::path get_base_output_path(const boost::filesystem::path& inpu
 /****************************************************************************************************/
 
 fuzzer_t::fuzzer_t(const boost::filesystem::path& input_path,
-                   const boost::filesystem::path& output_root) :
+                   const boost::filesystem::path& output_root,
+                   bool                           path_hash) :
     input_path_m(input_path),
     base_output_path_m(get_base_output_path(input_path_m, output_root)),
     basename_m(input_path_m.stem().string()),
     extension_m(input_path_m.extension().string()),
-    output_m(base_output_path_m / (basename_m + "_fuzzing_summary.txt"))
+    output_m(base_output_path_m / (basename_m + "_fuzzing_summary.txt")),
+    path_hash_m(path_hash)
 { }
 
 /****************************************************************************************************/
@@ -641,9 +662,10 @@ fuzzer_t::fuzzer_t(const boost::filesystem::path& input_path,
 
 void fuzz(const inspection_forest_t&     forest,
           const boost::filesystem::path& input_path,
-          const boost::filesystem::path& output_root)
+          const boost::filesystem::path& output_root,
+          bool                           path_hash)
 {
-    fuzzer_t(input_path, output_root).fuzz(forest);
+    fuzzer_t(input_path, output_root, path_hash).fuzz(forest);
 }
 
 /****************************************************************************************************/

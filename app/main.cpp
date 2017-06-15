@@ -50,6 +50,7 @@ try
     std::string                                 dump_path;
     path_set                                    include_path_set;
     bool                                        quiet(false);
+    bool                                        path_hash(false);
 
     cli_parameters.add_options()
         ("help,?",
@@ -83,6 +84,9 @@ try
         ("quiet,q",
             boost::program_options::bool_switch(&quiet),
             "Suppress notifications and summaries (implied for -m fuzz)")
+        ("path-hash,h",
+            boost::program_options::bool_switch(&path_hash),
+            "hashes output file names (fuzz output mode only)")
         ("starting-struct,s",
             boost::program_options::value<std::string>(&starting_struct)
                 ->default_value("main"),
@@ -261,7 +265,7 @@ try
         // so we can free it up.
         binary.close();
 
-        fuzz(*forest, binary_path, output_path);
+        fuzz(*forest, binary_path, output_path, path_hash);
     }
     else if (output_mode == "dot")
     {
