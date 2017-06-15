@@ -489,7 +489,7 @@ std::size_t fuzzer_t::fuzz_shuffle_entry(const attack_vector_t& entry)
     // files upon output and is a good start for an attack of this type.
 
     typedef std::vector<const_inspection_branch_t> child_node_set_t;
-    typedef child_node_set_t::iterator             iterator;
+    //typedef child_node_set_t::iterator             iterator;
 
     child_node_set_t                          node_set;
     inspection_forest_t::const_child_iterator iter(adobe::child_begin(entry.branch_m));

@@ -16,6 +16,13 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/program_options.hpp>
 #include <boost/version.hpp>
+#include <boost/bind.hpp>
+
+// asl
+#include <adobe/config.hpp>
+
+// stlab
+#include <stlab/version.hpp>
 
 // application
 #include <binspector/analyzer.hpp>
@@ -88,6 +95,10 @@ try
 
     if (argc == 1 || var_map.count("help"))
     {
+        constexpr auto STLAB_VERSION_MAJOR(STLAB_VERSION / 100000);
+        constexpr auto STLAB_VERSION_MINOR(STLAB_VERSION / 100 % 1000);
+        constexpr auto STLAB_VERSION_SUBMINOR(STLAB_VERSION % 100);
+
         std::cout << "Usage:\n"
                   << "  " << boost::filesystem::path(argv[0]).stem().string() << " [options]\n"
                   << '\n'
@@ -99,8 +110,9 @@ try
                   << "Build Information:\n"
                   << "  Timestamp: " << __DATE__ << " " << __TIME__ << '\n'
                   << "   Compiler: " << BOOST_COMPILER << '\n'
-                  << "        ASL: " << ADOBE_VERSION_MAJOR << "." << ADOBE_VERSION_MINOR << "." << ADOBE_VERSION_SUBMINOR << '\n'
-                  << "      Boost: " << (BOOST_VERSION / 100000) << "." << (BOOST_VERSION / 100 % 1000) << "." << (BOOST_VERSION % 100) << '\n'
+                  << "      stlab: " << STLAB_VERSION_MAJOR << "." << STLAB_VERSION_MINOR << "." << STLAB_VERSION_SUBMINOR << '\n'
+                  << "        asl: " << ADOBE_VERSION_MAJOR << "." << ADOBE_VERSION_MINOR << "." << ADOBE_VERSION_SUBMINOR << '\n'
+                  << "      boost: " << (BOOST_VERSION / 100000) << "." << (BOOST_VERSION / 100 % 1000) << "." << (BOOST_VERSION % 100) << '\n'
 #ifndef NDEBUG
                   << "       Mode: Debug\n";
 #else

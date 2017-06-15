@@ -45,6 +45,7 @@ BOOST_DT_VER=${BOOST_MAJOR}.${BOOST_MINOR}.${BOOST_DOT}
 BOOST_US_VER=${BOOST_MAJOR}_${BOOST_MINOR}_${BOOST_DOT}
 BOOST_DIR=boost_${BOOST_US_VER}
 BOOST_TAR=$BOOST_DIR.tar.gz
+BOOST_DST=boost_libraries
 
 # Make sure the dependencies we grab are in the same branch we are.
 if [ -z "$TRAVIS_BRANCH" ]; then
@@ -54,18 +55,16 @@ fi
 # Make sure we're at the top-level directory when we set up all our siblings.
 cd ..
 
-echo_run git_dependency https://github.com/stlab/libraries.git 'libraries'
+echo_run git_dependency https://github.com/stlab/libraries.git 'stlab'
 echo_run git_dependency https://github.com/stlab/adobe_source_libraries 'adobe_source_libraries'
 echo_run git_dependency https://github.com/stlab/adobe_platform_libraries 'adobe_platform_libraries' master
 echo_run git_dependency https://github.com/stlab/double-conversion.git 'double-conversion' master
 
-exit 0;
-
 # If need be, download Boost and unzip it, moving it to the appropriate location.
-if [ ! -e 'boost_libraries' ]; then
-    echo "INFO : boost_libraries not found: setting up."
+if [ ! -e "$BOOST_DST" ]; then
+    echo "INFO : $BOOST_DST not found: setting up."
 
-    if [ ! -e $BOOST_TAR ]; then
+    if [ ! -e "$BOOST_TAR" ]; then
         echo "INFO : $BOOST_TAR not found: downloading."
 
         echo_run curl -L "http://sourceforge.net/projects/boost/files/boost/$BOOST_DT_VER/$BOOST_TAR/download" -o $BOOST_TAR;
@@ -73,22 +72,22 @@ if [ ! -e 'boost_libraries' ]; then
         echo "INFO : $BOOST_TAR found: skipping download."
     fi
 
-    echo_run rm -rf $BOOST_DIR
-
-    echo_run tar -xf $BOOST_TAR
-
-    echo_run rm -rf boost_libraries
-
-    echo_run mv $BOOST_DIR boost_libraries
+    echo_run mkdir $BOOST_DST
+    echo_run tar -C $BOOST_DST -xzf $BOOST_TAR --strip-components 1 $BOOST_DIR/boost/
+    echo_run tar -C $BOOST_DST -xzf $BOOST_TAR --strip-components 1 $BOOST_DIR/bootstrap.sh
+    echo_run tar -C $BOOST_DST -xzf $BOOST_TAR --strip-components 1 $BOOST_DIR/Jamroot
+    echo_run tar -C $BOOST_DST -xzf $BOOST_TAR --strip-components 1 $BOOST_DIR/boostcpp.jam
+    echo_run tar -C $BOOST_DST -xzf $BOOST_TAR --strip-components 1 $BOOST_DIR/libs/
+    echo_run tar -C $BOOST_DST -xzf $BOOST_TAR --strip-components 1 $BOOST_DIR/tools/build/
 else
-    echo "INFO : boost_libraries found: skipping setup."
+    echo "INFO : $BOOST_DST found: skipping setup."
 fi
 
 # Create b2 (bjam) via boostrapping, again if need be.
-if [ ! -e './boost_libraries/b2' ]; then
+if [ ! -e "./$BOOST_DST/b2" ]; then
     echo "INFO : b2 not found: boostrapping."
 
-    echo_run cd boost_libraries;
+    echo_run cd $BOOST_DST;
 
     echo_run ./bootstrap.sh --with-toolset=${TOOLSET:-clang}
 

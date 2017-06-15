@@ -1,18 +1,16 @@
 language: objective-c
 compiler:
-    - clang
+- clang
 branches:
-    only:
-        - master
+  only:
+  - master
+  - develop
 notifications:
-  recipients:
-    - gxrtBk7MFiA26YqxA9PpXYxwEq6dkm@api.pushover.net
-  email:
-    on_success: always
-    on_failure: always
+  slack:
+    secure: sS8dV4uF0miMIUXolG9nmbyI0IO88+/gZaazlEkC+ZAm+K3lP4z7jHyfHEtWMF17kEnNUynYuwr39+6IqgE0uzgq7Ak+1aHQnLnmWKuceC4BuruuVp8NcMeFTndy/ZphtO3CJw7DPfBKHCpg7sfnxMONaeePumBxNhqw0BNSW6c=
 install:
-    - ./configure.sh
+- "./configure.sh"
 env:
-    - BUILDTOOL=bjam BUILDMODE=debug
-    - BUILDTOOL=bjam BUILDMODE=release
-script: ./smoke_test.sh
+- BUILDTOOL=bjam BUILDMODE=debug
+- BUILDTOOL=bjam BUILDMODE=release
+script: "./smoke_test.sh"

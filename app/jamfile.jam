@@ -4,8 +4,9 @@ project app
     : requirements
         <include>$(asl-path)
         <include>$(apl-path)
+        <include>$(stlab-path)
+        <include>$(double-conversion-path)
         <include>$(boost-path)
-        <include>../../ # for double-conversion
         <include>../
     : default-build
         <link>static

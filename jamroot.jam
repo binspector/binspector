@@ -6,8 +6,10 @@ import os ;
 import testing ;
 import feature ;
 
-# Permits overriding several default directories by specifying values in the OS
+#
+# Permits overriding the Boost directory by specifying BOOST_PATH in the OS
 # environment table.
+#
 
 local boost-path = [ os.environ BOOST_PATH ] ;
 
@@ -24,6 +26,53 @@ path-constant boost-path : $(boost-path) ;
 
 use-project /boost : $(boost-path)  ;
 
+echo boost-path: $(boost-path) ;
+
+#
+# Permits overriding the double-conversion directory by specifying DBL_CONV_PATH
+# in the OS environment table.
+#
+
+local double-conversion-path = [ os.environ DBL_CONV_PATH ] ;
+
+if $(double-conversion-path)
+{
+    double-conversion-path = $(double-conversion-path) ;
+}
+else
+{
+    double-conversion-path = ../ ;
+}
+
+path-constant double-conversion-path : $(double-conversion-path) ;
+
+echo double-conversion-path: $(double-conversion-path) ;
+
+#
+# Permits overriding the stlab directory by specifying STLAB_PATH
+# in the OS environment table.
+#
+
+local stlab-path = [ os.environ STLAB_PATH ] ;
+
+if $(stlab-path)
+{
+    stlab-path = $(stlab-path) ;
+}
+else
+{
+    stlab-path = ../stlab ;
+}
+
+path-constant stlab-path : $(stlab-path) ;
+
+echo stlab-path: $(stlab-path) ;
+
+#
+# Permits overriding the asl directory by specifying ASL_PATH
+# in the OS environment table.
+#
+
 local asl-path = [ os.environ ASL_PATH ] ;
 
 if $(asl-path)
@@ -36,6 +85,13 @@ else
 }
 
 path-constant asl-path : $(asl-path) ;
+
+echo asl-path: $(asl-path) ;
+
+#
+# Permits overriding the apl directory by specifying APL_PATH
+# in the OS environment table.
+#
 
 local apl-path = [ os.environ APL_PATH ] ;
 
@@ -50,25 +106,18 @@ else
 
 path-constant apl-path : $(apl-path) ;
 
-# Set up c++11 support as a feature so it will propagate into the
+echo apl-path: $(apl-path) ;
+
+# Set up c++14 support as a feature so it will propagate into the
 # boost dependencies
 
-feature.feature cpp11 :
+feature.feature cpp14 :
     on :
     composite optional propagated
     ;
 
-feature.compose <cpp11>on :
-        <cxxflags>"-std=c++11 -fconstexpr-depth=1024 -ftemplate-depth=1024"
-    ;
-
-feature.feature libc++ :
-    on :
-    composite optional propagated
-    ;
-
-feature.compose <libc++>on :
-        <cxxflags>"-stdlib=libc++"
+feature.compose <cpp14>on :
+        <cxxflags>"-std=c++14 -stdlib=libc++ -fconstexpr-depth=1024 -ftemplate-depth=1024"
         <define>BOOST_NO_CXX11_NUMERIC_LIMITS=1
         <linkflags>"-lc++"
     ;
@@ -80,8 +129,7 @@ project binspector
         <define>ADOBE_STD_SERIALIZATION=1
 
         # Clang toolset specializations
-        <toolset>clang:<cpp11>on
-        <toolset>clang:<libc++>on
+        <toolset>clang:<cpp14>on
 
         # MSVC specializations
         <toolset>msvc:<cxxflags>"-DUNICODE -D_UNICODE"
@@ -105,5 +153,7 @@ project binspector
     : build-dir
         $(TOP)/../built_artifacts
     ;
+
+echo building... ;
 
 build-project app ;
