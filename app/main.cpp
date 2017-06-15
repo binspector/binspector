@@ -51,6 +51,7 @@ try
     path_set                                    include_path_set;
     bool                                        quiet(false);
     bool                                        path_hash(false);
+    bool                                        fuzz_recurse(false);
 
     cli_parameters.add_options()
         ("help,?",
@@ -87,6 +88,9 @@ try
         ("path-hash,h",
             boost::program_options::bool_switch(&path_hash),
             "hashes output file names (fuzz output mode only)")
+        ("fuzz-recurse,r",
+            boost::program_options::bool_switch(&fuzz_recurse),
+            "Recursive fuzz mode. Generates about 1000 files. Each time a file is generated, there's a good chance it will be used as the basis for another fuzz. Implies --path_hash")
         ("starting-struct,s",
             boost::program_options::value<std::string>(&starting_struct)
                 ->default_value("main"),
@@ -265,7 +269,7 @@ try
         // so we can free it up.
         binary.close();
 
-        fuzz(*forest, binary_path, output_path, path_hash);
+        fuzz(*forest, binary_path, output_path, path_hash || fuzz_recurse, fuzz_recurse);
     }
     else if (output_mode == "dot")
     {

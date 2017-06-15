@@ -11,13 +11,15 @@
 // stdc++
 #include <iostream>
 #include <fstream>
+#include <memory>
+#include <random>
 #include <set>
 
 // boost
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/lexical_cast.hpp>
-//#include <boost/timer/timer.hpp>
+#include <boost/optional.hpp>
 #include <boost/version.hpp>
 
 // asl
@@ -33,6 +35,8 @@
 
 namespace {
 
+/****************************************************************************************************/
+
 template <typename T>
 std::string to_string_fmt(const T& x, const char* fmt) {
     auto n(std::snprintf(nullptr, 0, fmt, x));
@@ -46,20 +50,64 @@ std::string to_string_fmt(const T& x, const char* fmt) {
 
 /****************************************************************************************************/
 
-struct zero_generator_t
-{
-    static const std::string& identifier()
-    {
-        static const std::string value_s("z");
+class fuzz_generator_t {
+    struct concept {
+        virtual std::string identifier() const = 0;
+        virtual std::uint64_t bit_count() const = 0;
+        virtual rawbytes_t operator()() const = 0;
+    };
 
-        return value_s;
+    template <typename G>
+    struct model : public concept {
+        explicit model(G&& g) : _g(std::forward<G>(g)) { }
+
+        std::string identifier() const override { return _g.identifier(); }
+        std::uint64_t bit_count() const override { return _g.bit_count(); }
+        rawbytes_t operator()() const override { return _g(); }
+
+        G _g;
+    };
+
+    std::unique_ptr<concept> _ptr;
+
+public:
+    fuzz_generator_t() = default;
+
+    template <typename G>
+    fuzz_generator_t(G&& g) : _ptr(std::make_unique<model<G>>(std::forward<G>(g))) { }
+
+    std::string identifier() const {
+        return _ptr->identifier();
     }
 
-    rawbytes_t operator()(std::size_t bit_count)
-    {
-        std::size_t bytecount(bit_count / 8);
+    std::uint64_t bit_count() const {
+        return _ptr->bit_count();
+    }
 
-        if (bit_count % 8 != 0)
+    rawbytes_t operator()() const {
+        return (*_ptr)();
+    }
+};
+
+/****************************************************************************************************/
+
+class zero_generator_t
+{
+    std::size_t bit_count_m;
+
+public:
+    explicit zero_generator_t(std::size_t bit_count) : bit_count_m(bit_count)
+    { }
+
+    std::string identifier() const { return "z"; }
+
+    std::uint64_t bit_count() const { return bit_count_m; }
+
+    rawbytes_t operator()() const
+    {
+        std::size_t bytecount(bit_count_m / 8);
+
+        if (bit_count_m % 8 != 0)
             ++bytecount;
 
         return rawbytes_t(bytecount, 0);
@@ -68,20 +116,23 @@ struct zero_generator_t
 
 /****************************************************************************************************/
 
-struct ones_generator_t
+class ones_generator_t
 {
-    static const std::string& identifier()
+    std::size_t bit_count_m;
+
+public:
+    explicit ones_generator_t(std::size_t bit_count) : bit_count_m(bit_count)
+    { }
+
+    std::string identifier() const { return "o"; }
+
+    std::uint64_t bit_count() const { return bit_count_m; }
+
+    rawbytes_t operator()() const
     {
-        static const std::string value_s("o");
+        std::size_t bytecount(bit_count_m / 8);
 
-        return value_s;
-    }
-
-    rawbytes_t operator()(std::size_t bit_count)
-    {
-        std::size_t bytecount(bit_count / 8);
-
-        if (bit_count % 8 != 0)
+        if (bit_count_m % 8 != 0)
             ++bytecount;
 
         return rawbytes_t(bytecount, 0xff);
@@ -180,13 +231,15 @@ struct enumerated_generator_t
 {
     explicit enumerated_generator_t(const adobe::any_regular_t& value,
                                     atom_base_type_t            base_type,
-                                    bool                        is_big_endian) :
+                                    bool                        is_big_endian,
+                                    std::size_t                 bit_count) :
         value_m(value),
         base_type_m(base_type),
-        is_big_endian_m(is_big_endian)
+        is_big_endian_m(is_big_endian),
+        bit_count_m(bit_count)
     { }
 
-    std::string identifier()
+    std::string identifier() const
     {
         std::stringstream stream;
 
@@ -195,10 +248,12 @@ struct enumerated_generator_t
         return stream.str();
     }
 
-    rawbytes_t operator()(std::size_t bit_count)
+    std::uint64_t bit_count() const { return bit_count_m; }
+
+    rawbytes_t operator()() const
     {
         return disintegrate_value(value_m,
-                                  bit_count,
+                                  bit_count_m,
                                   base_type_m,
                                   is_big_endian_m);
     }
@@ -207,6 +262,7 @@ private:
     adobe::any_regular_t value_m;
     atom_base_type_t     base_type_m;
     bool                 is_big_endian_m;
+    std::uint64_t        bit_count_m;
 };
 
 /****************************************************************************************************/
@@ -279,20 +335,24 @@ struct fuzzer_t
 {
     fuzzer_t(const boost::filesystem::path& input_path,
              const boost::filesystem::path& output_root,
-             bool                           path_hash);
+             bool                           path_hash,
+             bool                           recurse);
 
     void fuzz(const inspection_forest_t& forest);
 
 private:
     typedef std::vector<const_inspection_branch_t> node_set_t;
 
-    template <typename FuzzGenerator>
+    boost::optional<std::string> fuzz_location_with_opt(const inspection_position_t& location,
+                                                        fuzz_generator_t&            generator);
+
     std::size_t fuzz_location_with(const inspection_position_t& location,
-                                   boost::uint64_t              bit_count,
-                                   FuzzGenerator                generator);
+                                   fuzz_generator_t&            generator)
+    {
+        return fuzz_location_with_opt(location, generator) ? 1 : 0;
+    }
 
     std::size_t fuzz_location_with_enumeration(const inspection_position_t& location,
-                                               boost::uint64_t              bit_count,
                                                const attack_vector_t&       entry);
 
     std::size_t fuzz_shuffle_set_with(const node_set_t& node_set);
@@ -301,31 +361,53 @@ private:
 
     std::size_t fuzz_usage_entry(const attack_vector_t& entry);
 
+    void usage_entry_report(const attack_vector_t& entry);
+
+    bool should_recurse() const;
+
+    std::size_t fuzz_round(const inspection_forest_t& forest,
+                           const attack_vector_set_t& attack_vector_set);
+
+    void fuzz_recursive(const inspection_forest_t& forest,
+                        const attack_vector_set_t& attack_vector_set);
+
+    void fuzz_flat(const inspection_forest_t& forest,
+                   const attack_vector_set_t& attack_vector_set);
+
     boost::filesystem::path     input_path_m;
     boost::filesystem::path     base_output_path_m;
     std::string                 basename_m;
     std::string                 extension_m;
     boost::filesystem::ofstream output_m; // summary output
     bool                        path_hash_m;
+    bool                        recurse_m;
 };
 
 /****************************************************************************************************/
 
-template <typename FuzzGenerator>
-std::size_t fuzzer_t::fuzz_location_with(const inspection_position_t& location,
-                                         boost::uint64_t              bit_count,
-                                         FuzzGenerator                generator)
+boost::optional<std::string> fuzzer_t::fuzz_location_with_opt(const inspection_position_t& location,
+                                                              fuzz_generator_t&            generator)
 {
+    auto bit_count(generator.bit_count());
+
     if (bit_count % 8 != 0 || !location.byte_aligned())
     {
         output_m << "    ! Bit-level/byte-unaligned fuzzing is not yet supported. Location skipped.\n";
 
-        return 0;
+        return boost::optional<std::string>();
     }
 
     std::string attack_id = basename_m + "_" + serialize(location);
 
-    if (path_hash_m) {
+    if (path_hash_m)
+    {
+        if (recurse_m)
+            {
+            // append the input path so recursive fuzzes will have different
+            // file names if they wind up attacking the same location.
+            attack_id += input_path_m.string();
+            }
+
         attack_id = to_string_fmt(adobe::fnv1a<64>(attack_id), "%llx");
     }
 
@@ -335,7 +417,7 @@ std::size_t fuzzer_t::fuzz_location_with(const inspection_position_t& location,
     boost::filesystem::path output_path(base_output_path_m / cur_name);
 
     if (!duplicate_file(input_path_m, output_path, output_m))
-        return 0;
+        return boost::optional<std::string>();
 
     boost::filesystem::fstream fuzzed(output_path, std::ios::binary | std::ios::in | std::ios::out);
 
@@ -353,19 +435,18 @@ std::size_t fuzzer_t::fuzz_location_with(const inspection_position_t& location,
     fuzzed.seekp(pos);
 
     std::size_t byte_count(bit_count / 8);
-    rawbytes_t  fuzz_data(generator(bit_count));
+    rawbytes_t  fuzz_data(generator());
 
     fuzzed.write(reinterpret_cast<const char*>(&fuzz_data[0]), byte_count);
 
     output_m << "    > " << cur_name << '\n';
 
-    return 1;
+    return boost::optional<std::string>(cur_name);
 }
 
 /****************************************************************************************************/
 
 std::size_t fuzzer_t::fuzz_location_with_enumeration(const inspection_position_t& location,
-                                                     boost::uint64_t              bit_count,
                                                      const attack_vector_t&       entry)
 {
     if (entry.node_m.get_flag(is_array_element_k))
@@ -374,12 +455,14 @@ std::size_t fuzzer_t::fuzz_location_with_enumeration(const inspection_position_t
     const adobe::array_t& enumerated_option_set(entry.node_m.option_set_m);
     std::size_t           result(0);
 
-    for (adobe::array_t::const_iterator iter(enumerated_option_set.begin()), last(enumerated_option_set.end()); iter != last; ++iter)
-        result += fuzz_location_with(location,
-                                     bit_count,
-                                     enumerated_generator_t(*iter,
-                                                            entry.node_m.type_m,
-                                                            entry.node_m.get_flag(atom_is_big_endian_k)));
+    for (const auto& enum_option : enumerated_option_set) {
+        fuzz_generator_t fg{enumerated_generator_t(enum_option,
+                                                   entry.node_m.type_m,
+                                                   entry.node_m.get_flag(atom_is_big_endian_k),
+                                                   entry.node_m.bit_count_m)};
+
+        result += fuzz_location_with(location, fg);
+    }
 
     return result;
 }
@@ -529,7 +612,7 @@ std::size_t fuzzer_t::fuzz_shuffle_entry(const attack_vector_t& entry)
 
 /****************************************************************************************************/
 
-std::size_t fuzzer_t::fuzz_usage_entry(const attack_vector_t& entry)
+void fuzzer_t::usage_entry_report(const attack_vector_t& entry)
 {
     // output_m << " > fuzzing " << bit_count << "b @ " << location << '\n';
 
@@ -537,6 +620,10 @@ std::size_t fuzzer_t::fuzz_usage_entry(const attack_vector_t& entry)
     boost::uint64_t       bit_count(entry.node_m.bit_count_m);
 
     output_m << entry.path_m << '\n';
+
+    if (recurse_m)
+        output_m << "    ? base_input  : " << input_path_m.leaf().string() << "\n";
+
     output_m << "    ? attack_type : usage\n";
     output_m << "    ? use_count   : " << entry.count_m << '\n';
     output_m << "    ? offset      : " << location << '\n';
@@ -558,16 +645,24 @@ std::size_t fuzzer_t::fuzz_usage_entry(const attack_vector_t& entry)
 
     if (!entry.node_m.option_set_m.empty())
         output_m << "    ? enum_count  : " << entry.node_m.option_set_m.size() << '\n';
+}
 
-    std::size_t result(0);
+/****************************************************************************************************/
 
-    result += fuzz_location_with(location,
-                                 bit_count,
-                                 zero_generator_t());
+std::size_t fuzzer_t::fuzz_usage_entry(const attack_vector_t& entry)
+{
+    usage_entry_report(entry);
 
-    result += fuzz_location_with(location,
-                                 bit_count,
-                                 ones_generator_t());
+    inspection_position_t location(entry.node_m.location_m);
+    boost::uint64_t       bit_count(entry.node_m.bit_count_m);
+    std::size_t           result(0);
+
+    fuzz_generator_t zg{zero_generator_t(bit_count)};
+    fuzz_generator_t og{ones_generator_t(bit_count)};
+
+    result += fuzz_location_with(location, zg);
+
+    result += fuzz_location_with(location, og);
 
     if (!entry.node_m.option_set_m.empty())
     {
@@ -575,9 +670,7 @@ std::size_t fuzzer_t::fuzz_usage_entry(const attack_vector_t& entry)
         // in the set are values to which we can set this enumeration,
         // so let's go and do that just to see what breaks.
 
-        result += fuzz_location_with_enumeration(location,
-                                                 bit_count,
-                                                 entry);
+        result += fuzz_location_with_enumeration(location, entry);
     }
 
     return result;
@@ -585,16 +678,102 @@ std::size_t fuzzer_t::fuzz_usage_entry(const attack_vector_t& entry)
 
 /****************************************************************************************************/
 
-void fuzzer_t::fuzz(const inspection_forest_t& forest)
+void fuzzer_t::fuzz_recursive(const inspection_forest_t& forest,
+                              const attack_vector_set_t& attack_vector_set)
 {
-    if (!is_directory(base_output_path_m))
-        throw std::runtime_error(adobe::make_string("Output directory failure: ",
-                                                    base_output_path_m.string().c_str()));
+    std::size_t result(0);
+    std::size_t progress(0);
 
-    attack_vector_set_t attack_vector_set(build_attack_vector_set(forest));
-    std::size_t         count(attack_vector_set.size());
-    std::size_t         progress(0);
-    std::size_t         result(0);
+    while (result < 1000)
+        {
+        result += fuzz_round(forest, attack_vector_set);
+
+        std::size_t next_progress(static_cast<double>(result) / 1000 * 100);
+
+        if (progress != next_progress)
+            std::cerr << '.';
+
+        progress = next_progress;
+        }
+}
+
+/****************************************************************************************************/
+
+bool fuzzer_t::should_recurse() const
+{
+    static std::random_device               rd;
+    static std::mt19937                     gen(rd());
+    static std::uniform_real_distribution<> r_dist(0, 1);
+
+    return r_dist(gen) < 0.8;
+}
+
+/****************************************************************************************************/
+
+std::size_t fuzzer_t::fuzz_round(const inspection_forest_t& forest,
+                                 const attack_vector_set_t& attack_vector_set)
+{
+    static std::random_device rd;
+    static std::mt19937       gen(rd());
+
+    std::uniform_int_distribution<>  dist(0, attack_vector_set.size() - 1);
+    std::size_t                      attack_index(dist(gen));
+    const attack_vector_t&           attack(attack_vector_set[attack_index]);
+    std::size_t                      result(0);
+
+    if (attack.type_m == attack_vector_t::type_atom_usage_k)
+    {
+        std::size_t                     options_count(attack.node_m.option_set_m.size());
+        std::uniform_int_distribution<> dist(0, options_count + 1); /* zeroes and ones options */
+        std::size_t                     selected(dist(gen));
+        fuzz_generator_t                g;
+
+        if (selected == 0)
+        {
+            g = fuzz_generator_t(zero_generator_t(attack.node_m.bit_count_m));
+        }
+        else if (selected == 1)
+        {
+            g = fuzz_generator_t(ones_generator_t(attack.node_m.bit_count_m));
+        }
+        else
+        {
+            selected -= 2;
+
+            g = enumerated_generator_t(attack.node_m.option_set_m[selected],
+                                       attack.node_m.type_m,
+                                       attack.node_m.get_flag(atom_is_big_endian_k),
+                                       attack.node_m.bit_count_m);
+        }
+
+        usage_entry_report(attack);
+
+        boost::optional<std::string> new_path(fuzz_location_with_opt(attack.node_m.location_m, g));
+
+        if (new_path)
+            {
+            ++result;
+
+            if (should_recurse())
+                {
+                temp_assignment<boost::filesystem::path> save_input(input_path_m, base_output_path_m / *new_path);
+
+                result += fuzz_round(forest, attack_vector_set);
+                }
+            }
+    }
+
+    return result;
+}
+
+/****************************************************************************************************/
+
+void fuzzer_t::fuzz_flat(const inspection_forest_t& forest,
+                         const attack_vector_set_t& attack_vector_set)
+{
+    std::size_t count(attack_vector_set.size());
+    std::size_t progress(0);
+    std::size_t result(0);
 
     std::cerr << "Fuzzing " << count << " weak points ";
 
@@ -623,6 +802,22 @@ void fuzzer_t::fuzz(const inspection_forest_t& forest)
 
 /****************************************************************************************************/
 
+void fuzzer_t::fuzz(const inspection_forest_t& forest)
+{
+    if (!is_directory(base_output_path_m))
+        throw std::runtime_error(adobe::make_string("Output directory failure: ",
+                                                    base_output_path_m.string().c_str()));
+
+    attack_vector_set_t attack_vector_set(build_attack_vector_set(forest));
+
+    if (!recurse_m)
+        fuzz_flat(forest, attack_vector_set);
+    else
+        fuzz_recursive(forest, attack_vector_set);
+}
+
+/****************************************************************************************************/
+
 boost::filesystem::path get_base_output_path(const boost::filesystem::path& input_path,
                                              const boost::filesystem::path& output_root)
 {
@@ -645,13 +840,15 @@ boost::filesystem::path get_base_output_path(const boost::filesystem::path& inpu
 
 fuzzer_t::fuzzer_t(const boost::filesystem::path& input_path,
                    const boost::filesystem::path& output_root,
-                   bool                           path_hash) :
+                   bool                           path_hash,
+                   bool                           recurse) :
     input_path_m(input_path),
     base_output_path_m(get_base_output_path(input_path_m, output_root)),
     basename_m(input_path_m.stem().string()),
     extension_m(input_path_m.extension().string()),
     output_m(base_output_path_m / (basename_m + "_fuzzing_summary.txt")),
-    path_hash_m(path_hash)
+    path_hash_m(path_hash),
+    recurse_m(recurse)
 { }
 
 /****************************************************************************************************/
@@ -663,9 +860,10 @@ fuzzer_t::fuzzer_t(const boost::filesystem::path& input_path,
 void fuzz(const inspection_forest_t&     forest,
           const boost::filesystem::path& input_path,
           const boost::filesystem::path& output_root,
-          bool                           path_hash)
+          bool                           path_hash,
+          bool                           recurse)
 {
-    fuzzer_t(input_path, output_root, path_hash).fuzz(forest);
+    fuzzer_t(input_path, output_root, path_hash, recurse).fuzz(forest);
 }
 
 /****************************************************************************************************/
