@@ -12,6 +12,11 @@ echo_run ()
     fi
 }
 
+if [ "$BUILDTOOL" == "xcode" ]; then
+    echo "INFO : xcode build; skipping smoke test"
+    exit 0;
+fi
+
 echo_run cd `dirname $0`
 
 cd ..
