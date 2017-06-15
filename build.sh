@@ -24,8 +24,6 @@ fi
 
 if [ "$BUILDTOOL" == "xcode" ] ; then
 
-    exit 1; # Xcode project is in bad shape.
-
     if [ "$BUILDMODE" == "debug" ] ; then
         CURMODE="Debug"
     elif [ "$BUILDMODE" == "release" ] ; then
@@ -36,9 +34,9 @@ if [ "$BUILDTOOL" == "xcode" ] ; then
         CURMODE="Debug"
     fi
 
-    cd binspector/xcode
+    cd xcode
 
-    echo_run xcodebuild -project binspector.xcodeproj -configuration $CURMODE
+    echo_run xcodebuild -configuration $CURMODE
 
 elif [ "$BUILDTOOL" == "bjam" ] ; then
 
