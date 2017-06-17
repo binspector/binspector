@@ -91,6 +91,7 @@
 		CE974839152A6AED00818CE3 /* value_semantic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE97482E152A6AED00818CE3 /* value_semantic.cpp */; };
 		CE97483A152A6AED00818CE3 /* variables_map.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE97482F152A6AED00818CE3 /* variables_map.cpp */; };
 		CE97483B152A6AED00818CE3 /* winmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE974830152A6AED00818CE3 /* winmain.cpp */; };
+		CEA9306B1EF4E9F700A2C526 /* fuzz_generators.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CEA9306A1EF4E9F700A2C526 /* fuzz_generators.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -147,6 +148,7 @@
 		CE97482E152A6AED00818CE3 /* value_semantic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = value_semantic.cpp; sourceTree = "<group>"; };
 		CE97482F152A6AED00818CE3 /* variables_map.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = variables_map.cpp; sourceTree = "<group>"; };
 		CE974830152A6AED00818CE3 /* winmain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = winmain.cpp; sourceTree = "<group>"; };
+		CEA9306A1EF4E9F700A2C526 /* fuzz_generators.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fuzz_generators.cpp; sourceTree = "<group>"; };
 		CEBD5D7314F6BCD300A3B5F7 /* adam.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adam.cpp; sourceTree = "<group>"; };
 		CEBD5D7414F6BCD300A3B5F7 /* adam_evaluate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adam_evaluate.cpp; sourceTree = "<group>"; };
 		CEBD5D7514F6BCD300A3B5F7 /* adam_parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adam_parser.cpp; sourceTree = "<group>"; };
@@ -300,6 +302,7 @@
 				CE94950E14FDA01600BA35D7 /* bitreader.cpp */,
 				CE94950F14FDA01600BA35D7 /* common.cpp */,
 				CE41EEE5164B23BC0039C08B /* dot.cpp */,
+				CEA9306A1EF4E9F700A2C526 /* fuzz_generators.cpp */,
 				CE974776152A17A600818CE3 /* fuzzer.cpp */,
 				CE9499E4150533E400BA35D7 /* html_dump.cpp */,
 				CE94951014FDA01600BA35D7 /* interface.cpp */,
@@ -485,6 +488,7 @@
 				CE974777152A17A600818CE3 /* fuzzer.cpp in Sources */,
 				CE71EC9F19EC3E49009BEDEE /* bignum-dtoa.cc in Sources */,
 				CE974781152A17C000818CE3 /* connection.cpp in Sources */,
+				CEA9306B1EF4E9F700A2C526 /* fuzz_generators.cpp in Sources */,
 				CE974782152A17C000818CE3 /* named_slot_map.cpp in Sources */,
 				CE974783152A17C000818CE3 /* signal_base.cpp in Sources */,
 				CE974784152A17C000818CE3 /* slot.cpp in Sources */,

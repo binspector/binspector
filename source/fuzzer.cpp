@@ -30,240 +30,11 @@
 // application
 #include <binspector/analyzer.hpp>
 #include <binspector/parser.hpp>
+#include <binspector/fuzz_generators.hpp>
 
 /****************************************************************************************************/
 
 namespace {
-
-/****************************************************************************************************/
-
-template <typename T>
-std::string to_string_fmt(const T& x, const char* fmt) {
-    auto n(std::snprintf(nullptr, 0, fmt, x));
-
-    std::vector<char> buf(++n); // +1 for terminator
-
-    std::snprintf(&buf[0], buf.size(), fmt, x);
-
-    return std::string(&buf[0]); // REVISIT (fbrereto) : Eliminate the vector -> string copy
-}
-
-/****************************************************************************************************/
-
-class fuzz_generator_t {
-    struct concept {
-        virtual std::string identifier() const = 0;
-        virtual std::uint64_t bit_count() const = 0;
-        virtual rawbytes_t operator()() const = 0;
-    };
-
-    template <typename G>
-    struct model : public concept {
-        explicit model(G&& g) : _g(std::forward<G>(g)) { }
-
-        std::string identifier() const override { return _g.identifier(); }
-        std::uint64_t bit_count() const override { return _g.bit_count(); }
-        rawbytes_t operator()() const override { return _g(); }
-
-        G _g;
-    };
-
-    std::unique_ptr<concept> _ptr;
-
-public:
-    fuzz_generator_t() = default;
-
-    template <typename G>
-    fuzz_generator_t(G&& g) : _ptr(std::make_unique<model<G>>(std::forward<G>(g))) { }
-
-    std::string identifier() const {
-        return _ptr->identifier();
-    }
-
-    std::uint64_t bit_count() const {
-        return _ptr->bit_count();
-    }
-
-    rawbytes_t operator()() const {
-        return (*_ptr)();
-    }
-};
-
-/****************************************************************************************************/
-
-class zero_generator_t
-{
-    std::size_t bit_count_m;
-
-public:
-    explicit zero_generator_t(std::size_t bit_count) : bit_count_m(bit_count)
-    { }
-
-    std::string identifier() const { return "z"; }
-
-    std::uint64_t bit_count() const { return bit_count_m; }
-
-    rawbytes_t operator()() const
-    {
-        std::size_t bytecount(bit_count_m / 8);
-
-        if (bit_count_m % 8 != 0)
-            ++bytecount;
-
-        return rawbytes_t(bytecount, 0);
-    }
-};
-
-/****************************************************************************************************/
-
-class ones_generator_t
-{
-    std::size_t bit_count_m;
-
-public:
-    explicit ones_generator_t(std::size_t bit_count) : bit_count_m(bit_count)
-    { }
-
-    std::string identifier() const { return "o"; }
-
-    std::uint64_t bit_count() const { return bit_count_m; }
-
-    rawbytes_t operator()() const
-    {
-        std::size_t bytecount(bit_count_m / 8);
-
-        if (bit_count_m % 8 != 0)
-            ++bytecount;
-
-        return rawbytes_t(bytecount, 0xff);
-    }
-};
-
-/****************************************************************************************************/
-
-template <typename T>
-inline rawbytes_t raw_disintegration(const T& value)
-{
-    const char* rawp(reinterpret_cast<const char*>(&value));
-
-    return rawbytes_t(rawp, rawp + sizeof(value));
-}
-
-/****************************************************************************************************/
-
-rawbytes_t disintegrate_value(const adobe::any_regular_t& regular_value,
-                              boost::uint64_t             bit_count,
-                              atom_base_type_t            base_type,
-                              bool                        is_big_endian)
-{
-    rawbytes_t result;
-
-    // The first step is to convert the POD to a raw byte sequence.
-
-    double value(regular_value.cast<double>());
-
-    if (base_type == atom_unknown_k)
-    {
-        throw std::runtime_error("disintegrate_value: unknown atom base type");
-    }
-    else if (base_type == atom_float_k)
-    {
-        BOOST_STATIC_ASSERT((sizeof(float) == 4));
-        BOOST_STATIC_ASSERT((sizeof(double) == 8));
-
-        if (bit_count == (sizeof(float) * 8))
-            result = raw_disintegration<float>(value);
-        else if (bit_count == (sizeof(double) * 8))
-            result = raw_disintegration<double>(value);
-        else
-            throw std::runtime_error("disintegrate_value: float atom of specified bit count not supported.");
-    }
-    else if (bit_count <= 8)
-    {
-        if (base_type == atom_signed_k)
-            result = raw_disintegration<boost::int8_t>(value);
-        else if (base_type == atom_unsigned_k)
-            result = raw_disintegration<boost::uint8_t>(value);
-    }
-    else if (bit_count <= 16)
-    {
-        if (base_type == atom_signed_k)
-            result = raw_disintegration<boost::int16_t>(value);
-        else if (base_type == atom_unsigned_k)
-            result = raw_disintegration<boost::uint16_t>(value);
-    }
-    else if (bit_count <= 32)
-    {
-        if (base_type == atom_signed_k)
-            result = raw_disintegration<boost::int32_t>(value);
-        else if (base_type == atom_unsigned_k)
-            result = raw_disintegration<boost::uint32_t>(value);
-    }
-    else if (bit_count <= 64)
-    {
-        if (base_type == atom_signed_k)
-            result = raw_disintegration<boost::int64_t>(value);
-        else if (base_type == atom_unsigned_k)
-            result = raw_disintegration<boost::uint64_t>(value);
-    }
-    else
-    {
-        throw std::runtime_error("disintegrate_value: invalid bit count");
-    }
-
-    // The second step is to do any necessary endian-swapping of the raw byte sequence.
-
-#if __LITTLE_ENDIAN__ || defined(_M_IX86) || defined(_WIN32)
-    if (is_big_endian)
-        std::reverse(result.begin(), result.end());
-#endif
-#if __BIG_ENDIAN__
-    if (!is_big_endian)
-        std::reverse(result.begin(), result.end());
-#endif
-
-    return result;
-}
-
-/****************************************************************************************************/
-
-struct enumerated_generator_t
-{
-    explicit enumerated_generator_t(const adobe::any_regular_t& value,
-                                    atom_base_type_t            base_type,
-                                    bool                        is_big_endian,
-                                    std::size_t                 bit_count) :
-        value_m(value),
-        base_type_m(base_type),
-        is_big_endian_m(is_big_endian),
-        bit_count_m(bit_count)
-    { }
-
-    std::string identifier() const
-    {
-        std::stringstream stream;
-
-        stream << "e_" << adobe::begin_asl_cel << value_m << adobe::end_asl_cel;
-
-        return stream.str();
-    }
-
-    std::uint64_t bit_count() const { return bit_count_m; }
-
-    rawbytes_t operator()() const
-    {
-        return disintegrate_value(value_m,
-                                  bit_count_m,
-                                  base_type_m,
-                                  is_big_endian_m);
-    }
-
-private:
-    adobe::any_regular_t value_m;
-    atom_base_type_t     base_type_m;
-    bool                 is_big_endian_m;
-    std::uint64_t        bit_count_m;
-};
 
 /****************************************************************************************************/
 // might want to make this into a standalone struct that can be owned by the fuzzer, so the
@@ -344,10 +115,10 @@ private:
     typedef std::vector<const_inspection_branch_t> node_set_t;
 
     boost::optional<std::string> fuzz_location_with_opt(const inspection_position_t& location,
-                                                        fuzz_generator_t&            generator);
+                                                        const fuzz_generator_t&      generator);
 
     std::size_t fuzz_location_with(const inspection_position_t& location,
-                                   fuzz_generator_t&            generator)
+                                   const fuzz_generator_t&      generator)
     {
         return fuzz_location_with_opt(location, generator) ? 1 : 0;
     }
@@ -355,11 +126,11 @@ private:
     std::size_t fuzz_location_with_enumeration(const inspection_position_t& location,
                                                const attack_vector_t&       entry);
 
-    std::size_t fuzz_shuffle_set_with(const node_set_t& node_set);
+    std::size_t attack_chunk_array_with(const node_set_t& node_set);
 
-    std::size_t fuzz_shuffle_entry(const attack_vector_t& entry);
+    std::size_t attack_chunk_array(const attack_vector_t& entry);
 
-    std::size_t fuzz_usage_entry(const attack_vector_t& entry);
+    std::size_t attack_used_value(const attack_vector_t& entry);
 
     void usage_entry_report(const attack_vector_t& entry);
 
@@ -386,7 +157,7 @@ private:
 /****************************************************************************************************/
 
 boost::optional<std::string> fuzzer_t::fuzz_location_with_opt(const inspection_position_t& location,
-                                                              fuzz_generator_t&            generator)
+                                                              const fuzz_generator_t&      generator)
 {
     auto bit_count(generator.bit_count());
 
@@ -412,7 +183,8 @@ boost::optional<std::string> fuzzer_t::fuzz_location_with_opt(const inspection_p
     }
 
     // REVISIT (fbrereto) : String concatenation here.
-    std::string cur_name = attack_id + "_" + generator.identifier() + extension_m;
+    std::string id = generator.identifier();
+    std::string cur_name = attack_id + "_" + std::move(id) + extension_m;
 
     boost::filesystem::path output_path(base_output_path_m / cur_name);
 
@@ -455,21 +227,19 @@ std::size_t fuzzer_t::fuzz_location_with_enumeration(const inspection_position_t
     const adobe::array_t& enumerated_option_set(entry.node_m.option_set_m);
     std::size_t           result(0);
 
-    for (const auto& enum_option : enumerated_option_set) {
-        fuzz_generator_t fg{enumerated_generator_t(enum_option,
-                                                   entry.node_m.type_m,
-                                                   entry.node_m.get_flag(atom_is_big_endian_k),
-                                                   entry.node_m.bit_count_m)};
-
-        result += fuzz_location_with(location, fg);
-    }
+    for (const auto& enum_option : enumerated_option_set)
+        result += fuzz_location_with(location,
+                                     make_enum_generator(enum_option,
+                                                         entry.node_m.type_m,
+                                                         entry.node_m.get_flag(atom_is_big_endian_k),
+                                                         entry.node_m.bit_count_m));
 
     return result;
 }
 
 /****************************************************************************************************/
 
-std::size_t fuzzer_t::fuzz_shuffle_set_with(const node_set_t& node_set)
+std::size_t fuzzer_t::attack_chunk_array_with(const node_set_t& node_set)
 {
     std::size_t count(node_set.size());
 
@@ -574,7 +344,7 @@ std::size_t fuzzer_t::fuzz_shuffle_set_with(const node_set_t& node_set)
 
 /****************************************************************************************************/
 
-std::size_t fuzzer_t::fuzz_shuffle_entry(const attack_vector_t& entry)
+std::size_t fuzzer_t::attack_chunk_array(const attack_vector_t& entry)
 {
     std::size_t size = static_cast<std::size_t>(entry.node_m.cardinal_m);
 
@@ -607,7 +377,7 @@ std::size_t fuzzer_t::fuzz_shuffle_entry(const attack_vector_t& entry)
         return 0;
     }
 
-    return fuzz_shuffle_set_with(node_set);
+    return attack_chunk_array_with(node_set);
 }
 
 /****************************************************************************************************/
@@ -649,7 +419,7 @@ void fuzzer_t::usage_entry_report(const attack_vector_t& entry)
 
 /****************************************************************************************************/
 
-std::size_t fuzzer_t::fuzz_usage_entry(const attack_vector_t& entry)
+std::size_t fuzzer_t::attack_used_value(const attack_vector_t& entry)
 {
     usage_entry_report(entry);
 
@@ -657,12 +427,11 @@ std::size_t fuzzer_t::fuzz_usage_entry(const attack_vector_t& entry)
     boost::uint64_t       bit_count(entry.node_m.bit_count_m);
     std::size_t           result(0);
 
-    fuzz_generator_t zg{zero_generator_t(bit_count)};
-    fuzz_generator_t og{ones_generator_t(bit_count)};
+    result += fuzz_location_with(location, make_zero_generator(bit_count));
 
-    result += fuzz_location_with(location, zg);
+    result += fuzz_location_with(location, make_ones_generator(bit_count));
 
-    result += fuzz_location_with(location, og);
+    result += fuzz_location_with(location, make_rand_generator(bit_count));
 
     if (!entry.node_m.option_set_m.empty())
     {
@@ -684,6 +453,8 @@ void fuzzer_t::fuzz_recursive(const inspection_forest_t& forest,
     std::size_t result(0);
     std::size_t progress(0);
 
+    std::cerr << "Fuzzing random weak points ";
+
     while (result < 1000)
         {
         result += fuzz_round(forest, attack_vector_set);
@@ -695,14 +466,15 @@ void fuzzer_t::fuzz_recursive(const inspection_forest_t& forest,
 
         progress = next_progress;
         }
+
+    std::cerr << " done. Generated " << result << " files\n";
 }
 
 /****************************************************************************************************/
 
 bool fuzzer_t::should_recurse() const
 {
-    static std::random_device               rd;
-    static std::mt19937                     gen(rd());
+    static std::mt19937                     gen{std::random_device()()};
     static std::uniform_real_distribution<> r_dist(0, 1);
 
     return r_dist(gen) < 0.8;
@@ -713,8 +485,7 @@ bool fuzzer_t::should_recurse() const
 std::size_t fuzzer_t::fuzz_round(const inspection_forest_t& forest,
                                  const attack_vector_set_t& attack_vector_set)
 {
-    static std::random_device rd;
-    static std::mt19937       gen(rd());
+    static std::mt19937 gen{std::random_device()()};
 
     std::uniform_int_distribution<>  dist(0, attack_vector_set.size() - 1);
     std::size_t                      attack_index(dist(gen));
@@ -724,26 +495,30 @@ std::size_t fuzzer_t::fuzz_round(const inspection_forest_t& forest,
     if (attack.type_m == attack_vector_t::type_atom_usage_k)
     {
         std::size_t                     options_count(attack.node_m.option_set_m.size());
-        std::uniform_int_distribution<> dist(0, options_count + 1); /* zeroes and ones options */
+        std::uniform_int_distribution<> dist(0, options_count + 2); /* plus zero, ones, and rand options */
         std::size_t                     selected(dist(gen));
         fuzz_generator_t                g;
 
         if (selected == 0)
         {
-            g = fuzz_generator_t(zero_generator_t(attack.node_m.bit_count_m));
+            g = fuzz_generator_t(make_zero_generator(attack.node_m.bit_count_m));
         }
         else if (selected == 1)
         {
-            g = fuzz_generator_t(ones_generator_t(attack.node_m.bit_count_m));
+            g = fuzz_generator_t(make_ones_generator(attack.node_m.bit_count_m));
+        }
+        else if (selected == 2)
+        {
+            g = fuzz_generator_t(make_rand_generator(attack.node_m.bit_count_m));
         }
         else
         {
-            selected -= 2;
+            selected -= 3;
 
-            g = enumerated_generator_t(attack.node_m.option_set_m[selected],
-                                       attack.node_m.type_m,
-                                       attack.node_m.get_flag(atom_is_big_endian_k),
-                                       attack.node_m.bit_count_m);
+            g = make_enum_generator(attack.node_m.option_set_m[selected],
+                                    attack.node_m.type_m,
+                                    attack.node_m.get_flag(atom_is_big_endian_k),
+                                    attack.node_m.bit_count_m);
         }
 
         usage_entry_report(attack);
@@ -782,9 +557,9 @@ void fuzzer_t::fuzz_flat(const inspection_forest_t& forest,
         const attack_vector_t& attack(attack_vector_set[i]);
 
         if (attack.type_m == attack_vector_t::type_atom_usage_k)
-            result += fuzz_usage_entry(attack);
+            result += attack_used_value(attack);
         else if (attack.type_m == attack_vector_t::type_array_shuffle_k)
-            result += fuzz_shuffle_entry(attack);
+            result += attack_chunk_array(attack);
         else
             output_m << "    ! ERROR: Unknown attack vector type.\n";
 
@@ -796,8 +571,7 @@ void fuzzer_t::fuzz_flat(const inspection_forest_t& forest,
         progress = next_progress;
     }
 
-    std::cerr << " done.\n";
-    std::cerr << "Generated " << result << " files\n";
+    std::cerr << " done. Generated " << result << " files\n";
 }
 
 /****************************************************************************************************/

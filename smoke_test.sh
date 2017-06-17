@@ -79,3 +79,7 @@ echo_run $BINPATH -t ./binspector/test/issue11.bfft -i $JPEGPATH -m validate
 echo_run $BINPATH -t ./binspector/test/issue19.bfft -i ./binspector/test/empty.bin -m validate
 echo_run $BINPATH -t ./binspector/bfft/png.bfft -i $PNGPATH -m validate
 echo_run $BINPATH -t ./binspector/bfft/jpg.bfft -i $JPEGPATH -m validate
+echo_run $BINPATH -t ./binspector/bfft/png.bfft -i $PNGPATH -m fuzz --fuzz-recurse
+echo_run $BINPATH -t ./binspector/bfft/png.bfft -i $PNGPATH -m fuzz
+echo_run $BINPATH -t ./binspector/bfft/jpg.bfft -i $JPEGPATH -m fuzz --fuzz-recurse
+echo_run $BINPATH -t ./binspector/bfft/jpg.bfft -i $JPEGPATH -m fuzz

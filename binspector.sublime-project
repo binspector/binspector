@@ -34,6 +34,14 @@
         {
             "path": "./test",
             "name": "tests"
+        },
+        {
+            "path": "./xcode",
+            "name": "project",
+            "folder_exclude_patterns":
+            [
+                "binspector.xcodeproj",
+            ]
         }
 	]
 }

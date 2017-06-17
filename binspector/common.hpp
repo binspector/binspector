@@ -197,6 +197,19 @@ typedef std::vector<attack_vector_t> attack_vector_set_t;
 attack_vector_set_t build_attack_vector_set(const inspection_forest_t& forest);
 
 /****************************************************************************************************/
+
+template <typename T>
+std::string to_string_fmt(const T& x, const char* fmt) {
+    auto n(std::snprintf(nullptr, 0, fmt, x));
+
+    std::vector<char> buf(++n); // +1 for terminator
+
+    std::snprintf(&buf[0], buf.size(), fmt, x);
+
+    return std::string(&buf[0]); // REVISIT (fbrereto) : Eliminate the vector -> string copy
+}
+
+/****************************************************************************************************/
 // BINSPECTOR_COMMON_HPP
 #endif
 
