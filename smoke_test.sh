@@ -12,11 +12,6 @@ echo_run ()
     fi
 }
 
-if [ "$BUILDTOOL" == "xcode" ]; then
-    echo "INFO : xcode build; skipping smoke test"
-    exit 0;
-fi
-
 echo_run cd `dirname $0`
 
 cd ..
@@ -43,6 +38,11 @@ fi
 
 # Always run build in case the sources have been touched.
 ./binspector/build.sh
+
+if [ "$BUILDTOOL" == "xcode" ]; then
+    echo "INFO : xcode build; skipping execution phase"
+    exit 0;
+fi
 
 if [ ! -e 'samples' ]; then
     mkdir 'samples'
