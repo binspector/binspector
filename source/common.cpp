@@ -17,6 +17,9 @@
 #include <adobe/implementation/token.hpp>
 #include <adobe/virtual_machine.hpp>
 
+// application
+#include <binspector/endian.hpp>
+
 /****************************************************************************************************/
 
 namespace {
@@ -747,7 +750,6 @@ adobe::any_regular_t contextual_evaluation_engine_t::array_function_lookup(adobe
 #if 0
 #pragma mark -
 #endif
-
 /****************************************************************************************************/
 
 adobe::any_regular_t evaluate(const rawbytes_t& raw,
@@ -757,14 +759,7 @@ adobe::any_regular_t evaluate(const rawbytes_t& raw,
 {
     rawbytes_t  byte_set(raw);
 
-#if __LITTLE_ENDIAN__ || defined(_M_IX86) || defined(_WIN32)
-    if (is_big_endian)
-        std::reverse(byte_set.begin(), byte_set.end());
-#endif
-#if __BIG_ENDIAN__
-    if (!is_big_endian)
-        std::reverse(byte_set.begin(), byte_set.end());
-#endif
+    host_to_endian(byte_set, is_big_endian);
 
     return convert_raw(byte_set, bit_count, base_type);
 }

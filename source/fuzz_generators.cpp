@@ -17,6 +17,7 @@
 
 // application
 #include <binspector/common.hpp>
+#include <binspector/endian.hpp>
 #include <binspector/error.hpp>
 
 /****************************************************************************************************/
@@ -92,15 +93,7 @@ rawbytes_t decompose(double           value,
     }
 
     // The second step is to do any necessary endian-swapping of the raw byte sequence.
-
-#if __LITTLE_ENDIAN__ || defined(_M_IX86) || defined(_WIN32)
-    if (is_big_endian)
-        std::reverse(result.begin(), result.end());
-#endif
-#if __BIG_ENDIAN__
-    if (!is_big_endian)
-        std::reverse(result.begin(), result.end());
-#endif
+    host_to_endian(result, is_big_endian);
 
     return result;
 }
@@ -151,16 +144,9 @@ std::uint64_t synthesize(const rawbytes_t& raw,
                          boost::uint64_t   bit_count,
                          atom_base_type_t  base_type,
                          bool              is_big_endian) {
-    rawbytes_t  byte_set(raw);
+    rawbytes_t byte_set(raw);
 
-#if __LITTLE_ENDIAN__ || defined(_M_IX86) || defined(_WIN32)
-    if (is_big_endian)
-        std::reverse(byte_set.begin(), byte_set.end());
-#endif
-#if __BIG_ENDIAN__
-    if (!is_big_endian)
-        std::reverse(byte_set.begin(), byte_set.end());
-#endif
+    host_to_endian(byte_set, is_big_endian);
 
     auto p(&byte_set[0]);
 
@@ -283,10 +269,9 @@ public:
     {
         auto        all_raw(decompose(v_m));
         std::size_t n(bit_count_m / 8);
-#if __LITTLE_ENDIAN__ || defined(_M_IX86) || defined(_WIN32)
+#if BINSPECTOR_ENDIAN_LITTLE
         auto        first{std::rbegin(all_raw)};
-#endif
-#if __BIG_ENDIAN__
+#else
         auto        first{std::begin(all_raw)};
 #endif
         rawbytes_t  result(first, first + n);
