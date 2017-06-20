@@ -13,7 +13,11 @@
 
 /****************************************************************************************************/
 
-#define require(cond) do { if (!(cond)) throw std::runtime_error(#cond); } while(false);
+#define require(cond)                        \
+    do {                                     \
+        if (!(cond))                         \
+            throw std::runtime_error(#cond); \
+    } while (false);
 
 /****************************************************************************************************/
 // BINSPECTOR_ERROR_HPP

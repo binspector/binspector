@@ -18,25 +18,23 @@
 
 /****************************************************************************************************/
 
-class user_quit_exception_t : public std::exception
-{
-    virtual const char* what() const throw() { return "user quit"; }
+class user_quit_exception_t : public std::exception {
+    virtual const char* what() const throw() {
+        return "user quit";
+    }
 };
 
 /****************************************************************************************************/
 
-class binspector_interface_t
-{
+class binspector_interface_t {
 public:
-    binspector_interface_t(std::istream& binary_file,
-                     auto_forest_t forest,
-                     std::ostream& output);
+    binspector_interface_t(std::istream& binary_file, auto_forest_t forest, std::ostream& output);
 
     void command_line();
 
-    typedef std::vector<std::string>                 command_segment_set_t;
+    typedef std::vector<std::string> command_segment_set_t;
     typedef bool (binspector_interface_t::*command_proc_t)(const command_segment_set_t&);
-    typedef std::map<std::string, command_proc_t>    command_map_t;
+    typedef std::map<std::string, command_proc_t> command_map_t;
 
     // commands
     bool quit(const command_segment_set_t&);
@@ -58,7 +56,7 @@ public:
 
     // cl processing helpers
     command_segment_set_t split_command_string(const std::string& command);
-    inspection_branch_t   expression_to_node(const std::string& expression_string);
+    inspection_branch_t expression_to_node(const std::string& expression_string);
 
     // output helpers
     template <typename R>

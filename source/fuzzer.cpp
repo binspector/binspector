@@ -45,13 +45,10 @@ inline rawbytes_t read(bitreader_t& reader, const node_t& node) {
 /****************************************************************************************************/
 // might want to make this into a standalone struct that can be owned by the fuzzer, so the
 // set isn't shared across multiple fuzzes (if we ever get there.)
-bool validate_unique_outfile(const boost::filesystem::path& file,
-                             std::ofstream&                 output)
-{
+bool validate_unique_outfile(const boost::filesystem::path& file, std::ofstream& output) {
     static std::set<boost::filesystem::path> file_set;
 
-    if (file_set.find(file) != file_set.end())
-    {
+    if (file_set.find(file) != file_set.end()) {
         // oops. Don't want to redo an file we've already made.
         // Figure out why you got here and fix it, yo!
 
@@ -70,13 +67,11 @@ bool validate_unique_outfile(const boost::filesystem::path& file,
 
 bool duplicate_file(const boost::filesystem::path& src,
                     const boost::filesystem::path& dst,
-                    std::ofstream&                 output)
-{
+                    std::ofstream&                 output) {
     if (!validate_unique_outfile(dst, output))
         return false;
 
-    if (exists(dst) && !remove(dst))
-    {
+    if (exists(dst) && !remove(dst)) {
         output << "    ! Could not replace " << dst.c_str() << '\n';
 
         return false;
@@ -84,11 +79,11 @@ bool duplicate_file(const boost::filesystem::path& src,
 
     copy_file(src, dst);
 
-    // gotta set the right permissions; we probably need a chmod equivalent
-    // on windows before this will function over there.
+// gotta set the right permissions; we probably need a chmod equivalent
+// on windows before this will function over there.
 
 #if BOOST_WINDOWS
-    // necessary for windows?
+// necessary for windows?
 #else
     chmod(dst.c_str(), S_IRUSR | S_IWUSR);
 #endif
@@ -98,8 +93,7 @@ bool duplicate_file(const boost::filesystem::path& src,
 
 /****************************************************************************************************/
 
-inline void rawbytes_out(std::ofstream& output, const rawbytes_t& data)
-{
+inline void rawbytes_out(std::ofstream& output, const rawbytes_t& data) {
     if (data.empty())
         return;
 
@@ -108,15 +102,13 @@ inline void rawbytes_out(std::ofstream& output, const rawbytes_t& data)
 
 /****************************************************************************************************/
 
-struct fuzzer_t
-{
+struct fuzzer_t {
     fuzzer_t(const boost::filesystem::path& input_path,
              const boost::filesystem::path& output_root,
              bool                           path_hash,
              bool                           recurse);
 
-    void fuzz(std::istream&              binary,
-              const inspection_forest_t& forest);
+    void fuzz(std::istream& binary, const inspection_forest_t& forest);
 
 private:
     typedef std::vector<const_inspection_branch_t> node_set_t;
@@ -125,8 +117,7 @@ private:
                                                         const fuzz_generator_t&      generator);
 
     std::size_t fuzz_location_with(const inspection_position_t& location,
-                                   const fuzz_generator_t&      generator)
-    {
+                                   const fuzz_generator_t&      generator) {
         return fuzz_location_with_opt(location, generator) ? 1 : 0;
     }
 
@@ -137,8 +128,7 @@ private:
 
     std::size_t attack_chunk_array(const attack_vector_t& entry);
 
-    std::size_t attack_used_value(bitreader_t&           reader,
-                                  const attack_vector_t& entry);
+    std::size_t attack_used_value(bitreader_t& reader, const attack_vector_t& entry);
 
     void usage_entry_report(const attack_vector_t& entry);
 
@@ -168,33 +158,30 @@ private:
 /****************************************************************************************************/
 
 boost::optional<std::string> fuzzer_t::fuzz_location_with_opt(const inspection_position_t& location,
-                                                              const fuzz_generator_t&      generator)
-{
+                                                              const fuzz_generator_t& generator) {
     auto bit_count(generator.bit_count());
 
-    if (bit_count % 8 != 0 || !location.byte_aligned())
-    {
-        output_m << "    ! Bit-level/byte-unaligned fuzzing is not yet supported. Location skipped.\n";
+    if (bit_count % 8 != 0 || !location.byte_aligned()) {
+        output_m
+            << "    ! Bit-level/byte-unaligned fuzzing is not yet supported. Location skipped.\n";
 
         return boost::optional<std::string>();
     }
 
     std::string attack_id = basename_m + "_" + serialize(location);
 
-    if (path_hash_m)
-    {
-        if (recurse_m)
-            {
+    if (path_hash_m) {
+        if (recurse_m) {
             // append the input path so recursive fuzzes will have different
             // file names if they wind up attacking the same location.
             attack_id += input_path_m.string();
-            }
+        }
 
         attack_id = to_string_fmt(adobe::fnv1a<64>(attack_id), "%llx");
     }
 
     // REVISIT (fbrereto) : String concatenation here.
-    std::string id = generator.identifier();
+    std::string id       = generator.identifier();
     std::string cur_name = attack_id + "_" + std::move(id) + extension_m;
 
     boost::filesystem::path output_path(base_output_path_m / cur_name);
@@ -206,12 +193,11 @@ boost::optional<std::string> fuzzer_t::fuzz_location_with_opt(const inspection_p
 
     // std::cerr << canonical(output_path).string() << '\n';
 
-    if (!fuzzed)
-        {
+    if (!fuzzed) {
         perror("!");
 
         throw std::runtime_error("Could not open file for fuzzed output.");
-        }
+    }
 
     std::fstream::pos_type pos(location.bytes());
 
@@ -230,8 +216,7 @@ boost::optional<std::string> fuzzer_t::fuzz_location_with_opt(const inspection_p
 /****************************************************************************************************/
 
 std::size_t fuzzer_t::fuzz_location_with_enumeration(const inspection_position_t& location,
-                                                     const attack_vector_t&       entry)
-{
+                                                     const attack_vector_t&       entry) {
     if (entry.node_m.get_flag(is_array_element_k))
         std::cerr << "WARNING: fuzzing an array entry; the forest may not be set up properly.\n";
 
@@ -239,19 +224,19 @@ std::size_t fuzzer_t::fuzz_location_with_enumeration(const inspection_position_t
     std::size_t           result(0);
 
     for (const auto& enum_option : enumerated_option_set)
-        result += fuzz_location_with(location,
-                                     make_enum_generator(enum_option,
-                                                         entry.node_m.type_m,
-                                                         entry.node_m.get_flag(atom_is_big_endian_k),
-                                                         entry.node_m.bit_count_m));
+        result +=
+            fuzz_location_with(location,
+                               make_enum_generator(enum_option,
+                                                   entry.node_m.type_m,
+                                                   entry.node_m.get_flag(atom_is_big_endian_k),
+                                                   entry.node_m.bit_count_m));
 
     return result;
 }
 
 /****************************************************************************************************/
 
-std::size_t fuzzer_t::attack_chunk_array_with(const node_set_t& node_set)
-{
+std::size_t fuzzer_t::attack_chunk_array_with(const node_set_t& node_set) {
     std::size_t count(node_set.size());
 
     // no sense in proceeding in these cases.
@@ -272,15 +257,13 @@ std::size_t fuzzer_t::attack_chunk_array_with(const node_set_t& node_set)
     //                   node to the end of the last node is in a contiguous block
     //                   in the file, and that the shuffling will be done within
     //                   this block.
-    for (std::size_t i(0); i < count; ++i)
-    {
+    for (std::size_t i(0); i < count; ++i) {
         inspection_position_t start_offset(node_set[i]->start_offset_m);
         inspection_position_t end_offset(node_set[i]->end_offset_m);
 
         if (start_offset == invalid_position_k || end_offset == invalid_position_k ||
             !start_offset.byte_aligned() || !end_offset.byte_aligned() ||
-            start_offset > end_offset)
-        {
+            start_offset > end_offset) {
             output_m << "    ! invalid child node position(s)\n";
 
             return 0;
@@ -299,17 +282,15 @@ std::size_t fuzzer_t::attack_chunk_array_with(const node_set_t& node_set)
             endpos = end_offset;
     }
 
-    if (startpos == invalid_position_k || endpos == invalid_position_k)
-    {
+    if (startpos == invalid_position_k || endpos == invalid_position_k) {
         output_m << "    ! bad blocking\n";
 
         return 0;
     }
 
-    rawbytes_t file_prefix(input.read(bytepos(0),
-                                      startpos - inspection_byte_k));
-    rawbytes_t file_suffix(input.read(endpos + inspection_byte_k,
-                                      input.size() - inspection_byte_k));
+    rawbytes_t file_prefix(input.read(bytepos(0), startpos - inspection_byte_k));
+    rawbytes_t file_suffix(
+        input.read(endpos + inspection_byte_k, input.size() - inspection_byte_k));
 
     // why am I doing this?
     basename_m += "_" + boost::lexical_cast<std::string>(startpos.bytes());
@@ -319,12 +300,9 @@ std::size_t fuzzer_t::attack_chunk_array_with(const node_set_t& node_set)
 
     // we start at 1 instead of 0 to reflect the fact we're avoiding the
     // 'no shift' option; each result will be different than the source file.
-    for (std::size_t i(1); i < count; ++i)
-    {
+    for (std::size_t i(1); i < count; ++i) {
         // shift the blocks one to the left.
-        std::rotate(element_byte_set.begin(),
-                    element_byte_set.begin() + 1,
-                    element_byte_set.end());
+        std::rotate(element_byte_set.begin(), element_byte_set.begin() + 1, element_byte_set.end());
 
         std::string cur_name(basename_m);
 
@@ -355,8 +333,7 @@ std::size_t fuzzer_t::attack_chunk_array_with(const node_set_t& node_set)
 
 /****************************************************************************************************/
 
-std::size_t fuzzer_t::attack_chunk_array(const attack_vector_t& entry)
-{
+std::size_t fuzzer_t::attack_chunk_array(const attack_vector_t& entry) {
     std::size_t size = static_cast<std::size_t>(entry.node_m.cardinal_m);
 
     output_m << entry.path_m << '\n';
@@ -381,8 +358,7 @@ std::size_t fuzzer_t::attack_chunk_array(const attack_vector_t& entry)
     for (; iter != last; ++iter)
         node_set.push_back(iter.base());
 
-    if (entry.node_m.cardinal_m != node_set.size())
-    {
+    if (entry.node_m.cardinal_m != node_set.size()) {
         output_m << "    ! cardinality/node_count mismatch!\n";
 
         return 0;
@@ -393,8 +369,7 @@ std::size_t fuzzer_t::attack_chunk_array(const attack_vector_t& entry)
 
 /****************************************************************************************************/
 
-void fuzzer_t::usage_entry_report(const attack_vector_t& entry)
-{
+void fuzzer_t::usage_entry_report(const attack_vector_t& entry) {
     // output_m << " > fuzzing " << bit_count << "b @ " << location << '\n';
 
     inspection_position_t location(entry.node_m.location_m);
@@ -422,7 +397,8 @@ void fuzzer_t::usage_entry_report(const attack_vector_t& entry)
 
     output_m << '\n';
 
-    output_m << "    ? big_endian  : " << std::boolalpha << entry.node_m.get_flag(atom_is_big_endian_k) << '\n';
+    output_m << "    ? big_endian  : " << std::boolalpha
+             << entry.node_m.get_flag(atom_is_big_endian_k) << '\n';
 
     if (!entry.node_m.option_set_m.empty())
         output_m << "    ? enum_count  : " << entry.node_m.option_set_m.size() << '\n';
@@ -430,9 +406,7 @@ void fuzzer_t::usage_entry_report(const attack_vector_t& entry)
 
 /****************************************************************************************************/
 
-std::size_t fuzzer_t::attack_used_value(bitreader_t&           reader,
-                                        const attack_vector_t& entry)
-{
+std::size_t fuzzer_t::attack_used_value(bitreader_t& reader, const attack_vector_t& entry) {
     usage_entry_report(entry);
 
     inspection_position_t location(entry.node_m.location_m);
@@ -443,16 +417,15 @@ std::size_t fuzzer_t::attack_used_value(bitreader_t&           reader,
 
     result += fuzz_location_with(location, make_ones_generator(bit_count));
 
-    result += fuzz_location_with(location, make_less_generator(entry.node_m,
-                                                               read(reader, entry.node_m)));
+    result +=
+        fuzz_location_with(location, make_less_generator(entry.node_m, read(reader, entry.node_m)));
 
-    result += fuzz_location_with(location, make_more_generator(entry.node_m,
-                                                               read(reader, entry.node_m)));
+    result +=
+        fuzz_location_with(location, make_more_generator(entry.node_m, read(reader, entry.node_m)));
 
     result += fuzz_location_with(location, make_rand_generator(bit_count));
 
-    if (!entry.node_m.option_set_m.empty())
-    {
+    if (!entry.node_m.option_set_m.empty()) {
         // We're looking at an enumerated value. Each of the options
         // in the set are values to which we can set this enumeration,
         // so let's go and do that just to see what breaks.
@@ -467,15 +440,13 @@ std::size_t fuzzer_t::attack_used_value(bitreader_t&           reader,
 
 void fuzzer_t::fuzz_recursive(bitreader_t&               reader,
                               const inspection_forest_t& forest,
-                              const attack_vector_set_t& attack_vector_set)
-{
+                              const attack_vector_set_t& attack_vector_set) {
     std::size_t result(0);
     std::size_t progress(0);
 
     std::cerr << "Fuzzing random weak points ";
 
-    while (result < 1000)
-        {
+    while (result < 1000) {
         result += fuzz_round(reader, forest, attack_vector_set);
 
         std::size_t next_progress(static_cast<double>(result) / 1000 * 100);
@@ -484,15 +455,14 @@ void fuzzer_t::fuzz_recursive(bitreader_t&               reader,
             std::cerr << '.';
 
         progress = next_progress;
-        }
+    }
 
     std::cerr << " done. Generated " << result << " files\n";
 }
 
 /****************************************************************************************************/
 
-bool fuzzer_t::should_recurse() const
-{
+bool fuzzer_t::should_recurse() const {
     static std::mt19937                     gen{std::random_device()()};
     static std::uniform_real_distribution<> r_dist(0, 1);
 
@@ -503,46 +473,32 @@ bool fuzzer_t::should_recurse() const
 
 std::size_t fuzzer_t::fuzz_round(bitreader_t&               reader,
                                  const inspection_forest_t& forest,
-                                 const attack_vector_set_t& attack_vector_set)
-{
+                                 const attack_vector_set_t& attack_vector_set) {
     static std::mt19937 gen{std::random_device()()};
 
-    std::uniform_int_distribution<>  dist(0, attack_vector_set.size() - 1);
-    std::size_t                      attack_index(dist(gen));
-    const attack_vector_t&           attack(attack_vector_set[attack_index]);
-    std::size_t                      result(0);
+    std::uniform_int_distribution<> dist(0, attack_vector_set.size() - 1);
+    std::size_t                     attack_index(dist(gen));
+    const attack_vector_t&          attack(attack_vector_set[attack_index]);
+    std::size_t                     result(0);
 
-    if (attack.type_m == attack_vector_t::type_atom_usage_k)
-    {
+    if (attack.type_m == attack_vector_t::type_atom_usage_k &&
+        attack.node_m.type_m != atom_unknown_k) {
         std::size_t                     options_count(attack.node_m.option_set_m.size());
         std::uniform_int_distribution<> dist(0, options_count + 4);
         std::size_t                     selected(dist(gen));
         fuzz_generator_t                g;
 
-        if (selected == 0)
-        {
+        if (selected == 0) {
             g = fuzz_generator_t(make_zero_generator(attack.node_m.bit_count_m));
-        }
-        else if (selected == 1)
-        {
+        } else if (selected == 1) {
             g = fuzz_generator_t(make_ones_generator(attack.node_m.bit_count_m));
-        }
-        else if (selected == 2)
-        {
-            g = fuzz_generator_t(make_less_generator(attack.node_m,
-                                                     read(reader, attack.node_m)));
-        }
-        else if (selected == 3)
-        {
-            g = fuzz_generator_t(make_more_generator(attack.node_m,
-                                                     read(reader, attack.node_m)));
-        }
-        else if (selected == 4)
-        {
+        } else if (selected == 2) {
+            g = fuzz_generator_t(make_less_generator(attack.node_m, read(reader, attack.node_m)));
+        } else if (selected == 3) {
+            g = fuzz_generator_t(make_more_generator(attack.node_m, read(reader, attack.node_m)));
+        } else if (selected == 4) {
             g = fuzz_generator_t(make_rand_generator(attack.node_m.bit_count_m));
-        }
-        else
-        {
+        } else {
             selected -= 5;
 
             g = make_enum_generator(attack.node_m.option_set_m[selected],
@@ -555,17 +511,16 @@ std::size_t fuzzer_t::fuzz_round(bitreader_t&               reader,
 
         boost::optional<std::string> new_path(fuzz_location_with_opt(attack.node_m.location_m, g));
 
-        if (new_path)
-            {
+        if (new_path) {
             ++result;
 
-            if (should_recurse())
-                {
-                temp_assignment<boost::filesystem::path> save_input(input_path_m, base_output_path_m / *new_path);
+            if (should_recurse()) {
+                temp_assignment<boost::filesystem::path> save_input(input_path_m,
+                                                                    base_output_path_m / *new_path);
 
                 result += fuzz_round(reader, forest, attack_vector_set);
-                }
             }
+        }
     }
 
     return result;
@@ -575,16 +530,14 @@ std::size_t fuzzer_t::fuzz_round(bitreader_t&               reader,
 
 void fuzzer_t::fuzz_flat(bitreader_t&               reader,
                          const inspection_forest_t& forest,
-                         const attack_vector_set_t& attack_vector_set)
-{
+                         const attack_vector_set_t& attack_vector_set) {
     std::size_t count(attack_vector_set.size());
     std::size_t progress(0);
     std::size_t result(0);
 
     std::cerr << "Fuzzing " << count << " weak points ";
 
-    for (std::size_t i(0); i < count; ++i)
-    {
+    for (std::size_t i(0); i < count; ++i) {
         const attack_vector_t& attack(attack_vector_set[i]);
 
         if (attack.type_m == attack_vector_t::type_atom_usage_k)
@@ -607,12 +560,10 @@ void fuzzer_t::fuzz_flat(bitreader_t&               reader,
 
 /****************************************************************************************************/
 
-void fuzzer_t::fuzz(std::istream&              binary,
-                    const inspection_forest_t& forest)
-{
+void fuzzer_t::fuzz(std::istream& binary, const inspection_forest_t& forest) {
     if (!is_directory(base_output_path_m))
-        throw std::runtime_error(adobe::make_string("Output directory failure: ",
-                                                    base_output_path_m.string().c_str()));
+        throw std::runtime_error(
+            adobe::make_string("Output directory failure: ", base_output_path_m.string().c_str()));
 
     bitreader_t         reader(binary);
     attack_vector_set_t attack_vector_set(build_attack_vector_set(forest));
@@ -626,8 +577,7 @@ void fuzzer_t::fuzz(std::istream&              binary,
 /****************************************************************************************************/
 
 boost::filesystem::path get_base_output_path(const boost::filesystem::path& input_path,
-                                             const boost::filesystem::path& output_root)
-{
+                                             const boost::filesystem::path& output_root) {
     boost::filesystem::path result;
 
     if (exists(output_root))
@@ -648,15 +598,11 @@ boost::filesystem::path get_base_output_path(const boost::filesystem::path& inpu
 fuzzer_t::fuzzer_t(const boost::filesystem::path& input_path,
                    const boost::filesystem::path& output_root,
                    bool                           path_hash,
-                   bool                           recurse) :
-    input_path_m(input_path),
-    base_output_path_m(get_base_output_path(input_path_m, output_root)),
-    basename_m(input_path_m.stem().string()),
-    extension_m(input_path_m.extension().string()),
-    output_m(base_output_path_m / (basename_m + "_fuzzing_summary.txt")),
-    path_hash_m(path_hash),
-    recurse_m(recurse)
-{ }
+                   bool                           recurse)
+    : input_path_m(input_path), base_output_path_m(get_base_output_path(input_path_m, output_root)),
+      basename_m(input_path_m.stem().string()), extension_m(input_path_m.extension().string()),
+      output_m(base_output_path_m / (basename_m + "_fuzzing_summary.txt")), path_hash_m(path_hash),
+      recurse_m(recurse) {}
 
 /****************************************************************************************************/
 
@@ -669,8 +615,7 @@ void fuzz(std::istream&                  binary,
           const boost::filesystem::path& input_path,
           const boost::filesystem::path& output_root,
           bool                           path_hash,
-          bool                           recurse)
-{
+          bool                           recurse) {
     fuzzer_t(input_path, output_root, path_hash, recurse).fuzz(binary, forest);
 }
 

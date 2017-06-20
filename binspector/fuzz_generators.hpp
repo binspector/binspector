@@ -23,21 +23,27 @@
 
 class fuzz_generator_t {
     struct concept {
-        virtual ~concept() = default;
+        virtual ~concept()                     = default;
         virtual std::string identifier() const = 0;
-        virtual std::size_t bit_count() const = 0;
-        virtual rawbytes_t operator()() const = 0;
+        virtual std::size_t bit_count() const  = 0;
+        virtual rawbytes_t  operator()() const = 0;
     };
 
     template <typename G>
     struct model : public concept {
         virtual ~model() = default;
 
-        explicit model(G&& g) : _g(std::forward<G>(g)) { }
+        explicit model(G&& g) : _g(std::forward<G>(g)) {}
 
-        std::string identifier() const override { return _g.identifier(); }
-        std::size_t bit_count() const override { return _g.bit_count(); }
-        rawbytes_t operator()() const override { return _g(); }
+        std::string identifier() const override {
+            return _g.identifier();
+        }
+        std::size_t bit_count() const override {
+            return _g.bit_count();
+        }
+        rawbytes_t operator()() const override {
+            return _g();
+        }
 
         G _g;
     };
@@ -48,7 +54,7 @@ public:
     fuzz_generator_t() = default;
 
     template <typename G>
-    fuzz_generator_t(G&& g) : _ptr(std::make_unique<model<G>>(std::forward<G>(g))) { }
+    fuzz_generator_t(G&& g) : _ptr(std::make_unique<model<G>>(std::forward<G>(g))) {}
 
     std::string identifier() const {
         return _ptr->identifier();

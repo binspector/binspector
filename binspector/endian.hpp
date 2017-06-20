@@ -19,23 +19,20 @@
 
 /****************************************************************************************************/
 
-enum class endian {
-    little,
-    big
-};
+enum class endian { little, big };
 
 #if __LITTLE_ENDIAN__ || defined(_M_IX86) || defined(_WIN32)
-    constexpr endian endian_k{endian::little};
+constexpr endian endian_k{endian::little};
 
-    #define BINSPECTOR_ENDIAN_LITTLE 1
-    #define BINSPECTOR_ENDIAN_BIG    0
+#define BINSPECTOR_ENDIAN_LITTLE 1
+#define BINSPECTOR_ENDIAN_BIG 0
 #endif
 
 #if __BIG_ENDIAN__
-    constexpr endian endian_k{endian::big};
+constexpr endian endian_k{endian::big};
 
-    #define BINSPECTOR_ENDIAN_BIG    1
-    #define BINSPECTOR_ENDIAN_LITTLE 0
+#define BINSPECTOR_ENDIAN_BIG 1
+#define BINSPECTOR_ENDIAN_LITTLE 0
 #endif
 
 constexpr bool endian_big_k{endian_k == endian::big};

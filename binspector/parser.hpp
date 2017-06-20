@@ -72,17 +72,14 @@
 */
 /****************************************************************************************************/
 
-class binspector_parser_t : protected adobe::expression_parser
-{
+class binspector_parser_t : protected adobe::expression_parser {
 public:
-    typedef std::function<void (adobe::name_t)>              set_structure_proc_t;
-    typedef std::function<void (adobe::name_t,
-                                const adobe::dictionary_t&)> add_field_proc_t;
-    typedef std::function<void (const adobe::dictionary_t&)> add_unnamed_field_proc_t;
-    typedef std::function<void (adobe::name_t,
-                                const adobe::dictionary_t&)> add_typedef_proc_t;
-    typedef std::vector<boost::filesystem::path>             include_directory_set_t;
-    typedef std::vector<boost::filesystem::path>             included_file_set_t;
+    typedef std::function<void(adobe::name_t)> set_structure_proc_t;
+    typedef std::function<void(adobe::name_t, const adobe::dictionary_t&)> add_field_proc_t;
+    typedef std::function<void(const adobe::dictionary_t&)> add_unnamed_field_proc_t;
+    typedef std::function<void(adobe::name_t, const adobe::dictionary_t&)> add_typedef_proc_t;
+    typedef std::vector<boost::filesystem::path> include_directory_set_t;
+    typedef std::vector<boost::filesystem::path> included_file_set_t;
 
     binspector_parser_t(std::istream&                   in,
                         const adobe::line_position_t&   position,
@@ -93,7 +90,7 @@ public:
                         const add_typedef_proc_t&       add_typedef_proc,
                         const included_file_set_t&      included_file_set = included_file_set_t());
 
-//  translation_unit = { struct_set }.
+    //  translation_unit = { struct_set }.
     void parse();
 
 private:
