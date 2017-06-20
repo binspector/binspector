@@ -16,7 +16,8 @@
 
 /****************************************************************************************************/
 
-void fuzz(const inspection_forest_t&     forest,
+void fuzz(std::istream&                  binary,
+          const inspection_forest_t&     forest,
           const boost::filesystem::path& input_path,
           const boost::filesystem::path& output_root,
           bool                           path_hash,

@@ -265,11 +265,7 @@ try
     }
     else if (output_mode == "fuzz")
     {
-        // at this point the source binary isn't needed for fuzzing
-        // so we can free it up.
-        binary.close();
-
-        fuzz(*forest, binary_path, output_path, path_hash || fuzz_recurse, fuzz_recurse);
+        fuzz(binary, *forest, binary_path, output_path, path_hash || fuzz_recurse, fuzz_recurse);
     }
     else if (output_mode == "dot")
     {

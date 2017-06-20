@@ -8,32 +8,14 @@
 // identity
 #include <binspector/fuzz_generators.hpp>
 
-// stdc
-// #include <sys/stat.h>
-
 // stdc++
-// #include <iostream>
-// #include <fstream>
-// #include <memory>
-// #include <random>
-// #include <set>
 #include <random>
 
 // boost
-// #include <boost/filesystem.hpp>
-// #include <boost/filesystem/fstream.hpp>
-// #include <boost/lexical_cast.hpp>
-// #include <boost/optional.hpp>
-// #include <boost/version.hpp>
 
 // asl
-// #include <adobe/string.hpp>
-// #include <adobe/iomanip_asl_cel.hpp>
-// #include <adobe/fnv.hpp>
 
 // application
-// #include <binspector/analyzer.hpp>
-// #include <binspector/parser.hpp>
 #include <binspector/common.hpp>
 #include <binspector/error.hpp>
 
@@ -44,11 +26,83 @@ namespace {
 /****************************************************************************************************/
 
 template <typename T>
-inline rawbytes_t raw_disintegration(const T& value)
+inline rawbytes_t decompose(const T& value)
 {
     const char* rawp(reinterpret_cast<const char*>(&value));
 
     return rawbytes_t(rawp, rawp + sizeof(value));
+}
+
+/****************************************************************************************************/
+
+rawbytes_t decompose(double           value,
+                     boost::uint64_t  bit_count,
+                     atom_base_type_t base_type,
+                     bool             is_big_endian)
+{
+    rawbytes_t result;
+
+    if (base_type == atom_unknown_k)
+    {
+        throw std::runtime_error("decompose: unknown atom base type");
+    }
+    else if (base_type == atom_float_k)
+    {
+        BOOST_STATIC_ASSERT((sizeof(float) == 4));
+        BOOST_STATIC_ASSERT((sizeof(double) == 8));
+
+        if (bit_count == (sizeof(float) * 8))
+            result = decompose<float>(value);
+        else if (bit_count == (sizeof(double) * 8))
+            result = decompose<double>(value);
+        else
+            throw std::runtime_error("decompose: float atom of specified bit count not supported.");
+    }
+    else if (bit_count <= 8)
+    {
+        if (base_type == atom_signed_k)
+            result = decompose<boost::int8_t>(value);
+        else if (base_type == atom_unsigned_k)
+            result = decompose<boost::uint8_t>(value);
+    }
+    else if (bit_count <= 16)
+    {
+        if (base_type == atom_signed_k)
+            result = decompose<boost::int16_t>(value);
+        else if (base_type == atom_unsigned_k)
+            result = decompose<boost::uint16_t>(value);
+    }
+    else if (bit_count <= 32)
+    {
+        if (base_type == atom_signed_k)
+            result = decompose<boost::int32_t>(value);
+        else if (base_type == atom_unsigned_k)
+            result = decompose<boost::uint32_t>(value);
+    }
+    else if (bit_count <= 64)
+    {
+        if (base_type == atom_signed_k)
+            result = decompose<boost::int64_t>(value);
+        else if (base_type == atom_unsigned_k)
+            result = decompose<boost::uint64_t>(value);
+    }
+    else
+    {
+        throw std::runtime_error("decompose: invalid bit count");
+    }
+
+    // The second step is to do any necessary endian-swapping of the raw byte sequence.
+
+#if __LITTLE_ENDIAN__ || defined(_M_IX86) || defined(_WIN32)
+    if (is_big_endian)
+        std::reverse(result.begin(), result.end());
+#endif
+#if __BIG_ENDIAN__
+    if (!is_big_endian)
+        std::reverse(result.begin(), result.end());
+#endif
+
+    return result;
 }
 
 /****************************************************************************************************/
@@ -93,6 +147,116 @@ public:
 
 /****************************************************************************************************/
 
+std::uint64_t synthesize(const rawbytes_t& raw,
+                         boost::uint64_t   bit_count,
+                         atom_base_type_t  base_type,
+                         bool              is_big_endian) {
+    rawbytes_t  byte_set(raw);
+
+#if __LITTLE_ENDIAN__ || defined(_M_IX86) || defined(_WIN32)
+    if (is_big_endian)
+        std::reverse(byte_set.begin(), byte_set.end());
+#endif
+#if __BIG_ENDIAN__
+    if (!is_big_endian)
+        std::reverse(byte_set.begin(), byte_set.end());
+#endif
+
+    auto p(&byte_set[0]);
+
+    if (bit_count <= 8) {
+        if (base_type == atom_signed_k)
+            return *reinterpret_cast<const boost::int8_t*>(p);
+
+        return *reinterpret_cast<const boost::uint8_t*>(p);
+    }
+
+    if (bit_count <= 16) {
+        if (base_type == atom_signed_k)
+            return *reinterpret_cast<const boost::int16_t*>(p);
+
+        return *reinterpret_cast<const boost::uint16_t*>(p);
+    }
+
+    if (bit_count <= 32) {
+        if (base_type == atom_signed_k)
+            return *reinterpret_cast<const boost::int32_t*>(p);
+
+        return *reinterpret_cast<const boost::uint32_t*>(p);
+    }
+
+    if (bit_count <= 64) {
+        if (base_type == atom_signed_k)
+            return *reinterpret_cast<const boost::int64_t*>(p);
+
+        return *reinterpret_cast<const boost::uint64_t*>(p);
+    }
+
+    throw std::runtime_error("synthesize: invalid bit count");
+}
+
+/****************************************************************************************************/
+
+class less_generator_t
+{
+    node_t      node_m;
+    rawbytes_t  raw_m;
+
+public:
+    less_generator_t(node_t node, rawbytes_t raw) :
+        node_m(std::move(node)),
+        raw_m(std::move(raw))
+    { }
+
+    std::string identifier() const { return "l"; }
+
+    std::size_t bit_count() const { return node_m.bit_count_m; }
+
+    rawbytes_t operator()() const
+    {
+        auto          bit_count{node_m.bit_count_m};
+        auto          type{node_m.type_m};
+        auto          big_endian{node_m.get_flag(atom_is_big_endian_k)};
+        std::uint64_t x{synthesize(raw_m, bit_count, type, big_endian)};
+
+        --x;
+
+        return decompose(x, bit_count, type, big_endian);
+    }
+};
+
+/****************************************************************************************************/
+
+class more_generator_t
+{
+    node_t      node_m;
+    rawbytes_t  raw_m;
+
+public:
+    more_generator_t(node_t node, rawbytes_t raw) :
+        node_m(std::move(node)),
+        raw_m(std::move(raw))
+    { }
+
+    std::string identifier() const { return "m"; }
+
+    std::size_t bit_count() const { return node_m.bit_count_m; }
+
+    rawbytes_t operator()() const
+    {
+        auto          bit_count{node_m.bit_count_m};
+        auto          type{node_m.type_m};
+        auto          big_endian{node_m.get_flag(atom_is_big_endian_k)};
+        std::uint64_t x{synthesize(raw_m, bit_count, type, big_endian)};
+
+        ++x;
+
+        return decompose(x, bit_count, type, big_endian);
+    }
+};
+
+/****************************************************************************************************/
+
 class rand_generator_t
 {
     std::size_t   bit_count_m;
@@ -117,7 +281,7 @@ public:
 
     rawbytes_t operator()() const
     {
-        auto        all_raw(raw_disintegration<>(v_m));
+        auto        all_raw(decompose(v_m));
         std::size_t n(bit_count_m / 8);
 #if __LITTLE_ENDIAN__ || defined(_M_IX86) || defined(_WIN32)
         auto        first{std::rbegin(all_raw)};
@@ -133,78 +297,6 @@ public:
 
 /****************************************************************************************************/
 
-rawbytes_t disintegrate_value(double           value,
-                              boost::uint64_t  bit_count,
-                              atom_base_type_t base_type,
-                              bool             is_big_endian)
-{
-    rawbytes_t result;
-
-    if (base_type == atom_unknown_k)
-    {
-        throw std::runtime_error("disintegrate_value: unknown atom base type");
-    }
-    else if (base_type == atom_float_k)
-    {
-        BOOST_STATIC_ASSERT((sizeof(float) == 4));
-        BOOST_STATIC_ASSERT((sizeof(double) == 8));
-
-        if (bit_count == (sizeof(float) * 8))
-            result = raw_disintegration<float>(value);
-        else if (bit_count == (sizeof(double) * 8))
-            result = raw_disintegration<double>(value);
-        else
-            throw std::runtime_error("disintegrate_value: float atom of specified bit count not supported.");
-    }
-    else if (bit_count <= 8)
-    {
-        if (base_type == atom_signed_k)
-            result = raw_disintegration<boost::int8_t>(value);
-        else if (base_type == atom_unsigned_k)
-            result = raw_disintegration<boost::uint8_t>(value);
-    }
-    else if (bit_count <= 16)
-    {
-        if (base_type == atom_signed_k)
-            result = raw_disintegration<boost::int16_t>(value);
-        else if (base_type == atom_unsigned_k)
-            result = raw_disintegration<boost::uint16_t>(value);
-    }
-    else if (bit_count <= 32)
-    {
-        if (base_type == atom_signed_k)
-            result = raw_disintegration<boost::int32_t>(value);
-        else if (base_type == atom_unsigned_k)
-            result = raw_disintegration<boost::uint32_t>(value);
-    }
-    else if (bit_count <= 64)
-    {
-        if (base_type == atom_signed_k)
-            result = raw_disintegration<boost::int64_t>(value);
-        else if (base_type == atom_unsigned_k)
-            result = raw_disintegration<boost::uint64_t>(value);
-    }
-    else
-    {
-        throw std::runtime_error("disintegrate_value: invalid bit count");
-    }
-
-    // The second step is to do any necessary endian-swapping of the raw byte sequence.
-
-#if __LITTLE_ENDIAN__ || defined(_M_IX86) || defined(_WIN32)
-    if (is_big_endian)
-        std::reverse(result.begin(), result.end());
-#endif
-#if __BIG_ENDIAN__
-    if (!is_big_endian)
-        std::reverse(result.begin(), result.end());
-#endif
-
-    return result;
-}
-
-/****************************************************************************************************/
-
 struct enum_generator_t
 {
     explicit enum_generator_t(double           value,
@@ -212,7 +304,7 @@ struct enum_generator_t
                               bool             is_big_endian,
                               std::size_t      bit_count) :
         identifier_m("e_" + to_string_fmt(value, "%.0f")),
-        disintegrated_m(disintegrate_value(value, bit_count, base_type, is_big_endian))
+        disintegrated_m(decompose(value, bit_count, base_type, is_big_endian))
     { }
 
     std::string identifier() const
@@ -246,6 +338,18 @@ fuzz_generator_t make_zero_generator(std::size_t bit_count) {
 
 fuzz_generator_t make_ones_generator(std::size_t bit_count) {
     return fuzz_generator_t{ones_generator_t(bit_count)};
+}
+
+/****************************************************************************************************/
+
+fuzz_generator_t make_less_generator(node_t node, rawbytes_t raw) {
+    return fuzz_generator_t{less_generator_t(std::move(node), std::move(raw))};
+}
+
+/****************************************************************************************************/
+
+fuzz_generator_t make_more_generator(node_t node, rawbytes_t raw) {
+    return fuzz_generator_t{more_generator_t(std::move(node), std::move(raw))};
 }
 
 /****************************************************************************************************/
