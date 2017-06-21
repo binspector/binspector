@@ -244,7 +244,7 @@ int main(int argc, char** argv) try {
     } else if (output_mode == "validate") {
         std::cout << combostream.str();
     } else if (output_mode == "fuzz") {
-        fuzz(binary, *forest, binary_path, output_path, path_hash || fuzz_recurse, fuzz_recurse);
+        fuzz(*forest, binary_path, output_path, path_hash || fuzz_recurse, fuzz_recurse);
     } else if (output_mode == "dot") {
         // at this point the source binary isn't needed for fuzzing
         // so we can free it up.

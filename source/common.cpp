@@ -870,12 +870,16 @@ attack_vector_set_t build_attack_vector_set(const inspection_forest_t& forest) {
 
     for (; iter != last; ++iter, ++node_count) {
         const_inspection_branch_t iter_base(iter.base());
-        std::size_t               use_count(iter_base->use_count_m);
-        bool                      used_atom(use_count != 0 && iter_base->bit_count_m != 0);
-        bool shuffle_array(iter_base->get_flag(is_array_root_k) && iter_base->cardinal_m != 0 &&
-                           iter_base->shuffle_m);
+        const auto&               node(*iter_base);
+        std::size_t               use_count(node.use_count_m);
+        bool                      used_atom(use_count != 0 && node.bit_count_m != 0);
+        bool shuffle_array(node.get_flag(is_array_root_k) && node.cardinal_m != 0 &&
+                           node.shuffle_m);
 
         if (!used_atom && !shuffle_array)
+            continue;
+
+        if (node.type_m == atom_unknown_k)
             continue;
 
         // takes time to build this - only do so when needed.

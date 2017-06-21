@@ -15,11 +15,16 @@
 
 // boost
 #include <boost/cstdint.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/operators.hpp>
 
 // asl
 #include <adobe/string.hpp>
+
+// stlab
+#include <stlab/concurrency/serial_queue.hpp>
+#include <stlab/concurrency/default_executor.hpp>
 
 /****************************************************************************************************/
 
@@ -205,6 +210,46 @@ private:
     bitreader_t&       input_m;
     bitreader_t::pos_t pos_m;
 };
+
+/****************************************************************************************************/
+
+class async_bitreader {
+    struct impl : std::enable_shared_from_this<impl> {
+        stlab::serial_queue_t queue_m;
+        std::ifstream         stream_m;
+        bitreader_t           reader_m;
+
+        impl(const boost::filesystem::path& path) :
+            queue_m(stlab::default_executor),
+            stream_m(path.string()),
+            reader_m(stream_m)
+        { }
+
+        ~impl() { 
+        }
+
+        auto enqueue(bitreader_t::pos_t position, boost::uint64_t bit_count) {
+            return queue_m([_this = shared_from_this(), _pos = std::move(position), _n = bit_count]{
+                return _this->reader_m.read_bits(_pos, _n);
+            });
+        }
+    };
+
+public:
+    std::shared_ptr<impl> impl_m;
+
+    explicit async_bitreader(const boost::filesystem::path& path) :
+        impl_m(std::make_shared<impl>(path)) {
+    }
+
+    auto operator()(bitreader_t::pos_t position, boost::uint64_t bit_count) {
+        return impl_m->enqueue(position, bit_count);
+    }
+};
+
+inline auto make_async_bitreader(const boost::filesystem::path& path) {
+    return async_bitreader(path);
+}
 
 /****************************************************************************************************/
 // BINSPECTOR_BITREADER_HPP
