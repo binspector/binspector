@@ -17,6 +17,9 @@
 /****************************************************************************************************/
 
 namespace detail {
+
+/****************************************************************************************************/
+
 struct helper {
     template <typename F>
     explicit helper(F&& f) : _commit(std::forward<F>(f)) {}
@@ -32,17 +35,21 @@ struct helper {
         _ss << std::forward<U>(x);
     }
 
-    std::stringstream                 _ss;
-    std::function<void (std::string)> _commit;
+    std::stringstream                _ss;
+    std::function<void(std::string)> _commit;
 };
 
-} // namespace detail
+/****************************************************************************************************/
 
 template <typename U>
-detail::helper operator<<(detail::helper s, U&& x) {
+helper operator<<(helper s, U&& x) {
     s.append(std::forward<U>(x));
     return s;
 }
+
+/****************************************************************************************************/
+
+} // namespace detail
 
 /****************************************************************************************************/
 // tsos = thread safe ostream
@@ -51,23 +58,24 @@ template <typename T>
 class tsos {
     friend class helper;
 
-    T _ostream;
+    T          _ostream;
     std::mutex _m;
 
 public:
     template <typename... Args>
-    explicit tsos(Args&&... args) : _ostream(std::forward<Args>(args)...) { }
+    explicit tsos(Args&&... args) : _ostream(std::forward<Args>(args)...) {}
 
     void commit(std::string s) {
-        stlab::scope<std::lock_guard<std::mutex>>(_m, [&]{
-            _ostream << std::move(s);
-        });
+        stlab::scope<std::lock_guard<std::mutex>>(_m, [&] { _ostream << std::move(s); });
     }
 };
 
+/****************************************************************************************************/
+
 template <typename T, typename U>
 detail::helper operator<<(tsos<T>& s, U&& x) {
-    return detail::helper([&_s = s](std::string str){_s.commit(std::move(str));}) << std::forward<U>(x);
+    return detail::helper([&_s = s](std::string str) { _s.commit(std::move(str)); })
+           << std::forward<U>(x);
 }
 
 /****************************************************************************************************/

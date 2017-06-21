@@ -219,28 +219,24 @@ class async_bitreader {
         std::ifstream         stream_m;
         bitreader_t           reader_m;
 
-        impl(const boost::filesystem::path& path) :
-            queue_m(stlab::default_executor),
-            stream_m(path.string()),
-            reader_m(stream_m)
-        { }
+        impl(const boost::filesystem::path& path)
+            : queue_m(stlab::default_executor), stream_m(path.string()), reader_m(stream_m) {}
 
-        ~impl() { 
-        }
+        ~impl() {}
 
         auto enqueue(bitreader_t::pos_t position, boost::uint64_t bit_count) {
-            return queue_m([_this = shared_from_this(), _pos = std::move(position), _n = bit_count]{
-                return _this->reader_m.read_bits(_pos, _n);
-            });
+            return queue_m(
+                [ _this = shared_from_this(), _pos = std::move(position), _n = bit_count ] {
+                    return _this->reader_m.read_bits(_pos, _n);
+                });
         }
     };
 
 public:
     std::shared_ptr<impl> impl_m;
 
-    explicit async_bitreader(const boost::filesystem::path& path) :
-        impl_m(std::make_shared<impl>(path)) {
-    }
+    explicit async_bitreader(const boost::filesystem::path& path)
+        : impl_m(std::make_shared<impl>(path)) {}
 
     auto operator()(bitreader_t::pos_t position, boost::uint64_t bit_count) {
         return impl_m->enqueue(position, bit_count);

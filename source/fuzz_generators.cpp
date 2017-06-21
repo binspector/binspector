@@ -235,7 +235,7 @@ class rand_generator_t {
     std::uint64_t v_m;
 
     std::uint64_t rnd_v() {
-        static thread_local std::mt19937                                 gen{std::random_device()()};
+        static thread_local std::mt19937 gen{std::random_device()()};
         static thread_local std::uniform_int_distribution<std::uint64_t> dist(
             0, std::numeric_limits<std::uint64_t>::max());
 

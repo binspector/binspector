@@ -46,7 +46,9 @@ typedef tsos<boost::filesystem::ofstream> tsofstream_t;
 
 template <typename T>
 auto block_on(const stlab::future<T>& f) {
-    while (!f.get_try()) { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
+    while (!f.get_try()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
 
     return *f.get_try();
 }
@@ -70,7 +72,7 @@ bool validate_unique_outfile(const boost::filesystem::path& file, tsofstream_t& 
     static std::set<boost::filesystem::path> file_set;
     static std::mutex                        m;
 
-    return stlab::scope<std::lock_guard<std::mutex>>(m, [&]{
+    return stlab::scope<std::lock_guard<std::mutex>>(m, [&] {
         if (file_set.find(file) != file_set.end()) {
             // oops. Don't want to redo an file we've already made.
             // Figure out why you got here and fix it, yo!
@@ -170,24 +172,24 @@ private:
     void fuzz_recursive(const inspection_forest_t& forest,
                         const attack_vector_set_t& attack_vector_set);
 
-    void fuzz_flat(const inspection_forest_t& forest,
-                   const attack_vector_set_t& attack_vector_set);
+    void fuzz_flat(const inspection_forest_t& forest, const attack_vector_set_t& attack_vector_set);
 
-    async_bitreader             reader_m;
-    boost::filesystem::path     input_path_m;
-    boost::filesystem::path     base_output_path_m;
-    std::string                 basename_m;
-    std::string                 extension_m;
-    tsofstream_t                output_m; // summary output
-    bool                        path_hash_m;
-    bool                        recurse_m;
+    async_bitreader         reader_m;
+    boost::filesystem::path input_path_m;
+    boost::filesystem::path base_output_path_m;
+    std::string             basename_m;
+    std::string             extension_m;
+    tsofstream_t            output_m; // summary output
+    bool                    path_hash_m;
+    bool                    recurse_m;
 };
 
 /****************************************************************************************************/
 
-boost::optional<std::string> fuzzer_t::fuzz_location_with_opt(const boost::filesystem::path& input_path,
-                                                              const inspection_position_t&   location,
-                                                              const fuzz_generator_t&        generator) {
+boost::optional<std::string> fuzzer_t::fuzz_location_with_opt(
+    const boost::filesystem::path& input_path,
+    const inspection_position_t&   location,
+    const fuzz_generator_t&        generator) {
     auto bit_count(generator.bit_count());
 
     if (bit_count % 8 != 0 || !location.byte_aligned()) {
@@ -446,11 +448,9 @@ std::size_t fuzzer_t::attack_used_value(const attack_vector_t& entry) {
 
     rawbytes_t raw{read_sync(reader_m, entry.node_m)};
 
-    result +=
-        fuzz_location_with(input_path_m, location, make_less_generator(entry.node_m, raw));
+    result += fuzz_location_with(input_path_m, location, make_less_generator(entry.node_m, raw));
 
-    result +=
-        fuzz_location_with(input_path_m, location, make_more_generator(entry.node_m, raw));
+    result += fuzz_location_with(input_path_m, location, make_more_generator(entry.node_m, raw));
 
     result += fuzz_location_with(input_path_m, location, make_rand_generator(bit_count));
 
@@ -476,19 +476,19 @@ void fuzzer_t::fuzz_recursive(const inspection_forest_t& forest,
 
     std::vector<stlab::future<std::size_t>> futures;
 
-    constexpr std::size_t n_k{10000};
+    constexpr std::size_t n_k{1000};
 
     while (true) {
         while (futures.size() < 10) {
-            futures.push_back(stlab::async(stlab::default_executor,
-                                           [_this = this, &_forest = forest, &_avs = attack_vector_set] {
-                return _this->fuzz_round(_this->input_path_m, _forest, _avs);
-            }));
+            futures.push_back(
+                stlab::async(stlab::default_executor,
+                             [ _this = this, &_forest = forest, &_avs = attack_vector_set ] {
+                                 return _this->fuzz_round(_this->input_path_m, _forest, _avs);
+                             }));
         }
 
-        auto mid = std::partition(begin(futures), end(futures), [](auto f){
-            return static_cast<bool>(f.get_try());
-        });
+        auto mid = std::partition(
+            begin(futures), end(futures), [](auto f) { return static_cast<bool>(f.get_try()); });
 
         for (auto iter(begin(futures)); iter != mid; ++iter) {
             result += *iter->get_try();
@@ -546,9 +546,11 @@ std::size_t fuzzer_t::fuzz_round(boost::filesystem::path    input_path,
         } else if (selected == 1) {
             g = fuzz_generator_t(make_ones_generator(attack.node_m.bit_count_m));
         } else if (selected == 2) {
-            g = fuzz_generator_t(make_less_generator(attack.node_m, read_sync(reader_m, attack.node_m)));
+            g = fuzz_generator_t(
+                make_less_generator(attack.node_m, read_sync(reader_m, attack.node_m)));
         } else if (selected == 3) {
-            g = fuzz_generator_t(make_more_generator(attack.node_m, read_sync(reader_m, attack.node_m)));
+            g = fuzz_generator_t(
+                make_more_generator(attack.node_m, read_sync(reader_m, attack.node_m)));
         } else if (selected == 4) {
             g = fuzz_generator_t(make_rand_generator(attack.node_m.bit_count_m));
         } else {
@@ -562,7 +564,8 @@ std::size_t fuzzer_t::fuzz_round(boost::filesystem::path    input_path,
 
         usage_entry_report(attack);
 
-        boost::optional<std::string> new_path(fuzz_location_with_opt(input_path, attack.node_m.location_m, g));
+        boost::optional<std::string> new_path(
+            fuzz_location_with_opt(input_path, attack.node_m.location_m, g));
 
         if (new_path) {
             ++result;
@@ -648,7 +651,8 @@ fuzzer_t::fuzzer_t(async_bitreader                reader,
                    const boost::filesystem::path& output_root,
                    bool                           path_hash,
                    bool                           recurse)
-    : reader_m(reader), input_path_m(input_path), base_output_path_m(get_base_output_path(input_path_m, output_root)),
+    : reader_m(reader), input_path_m(input_path),
+      base_output_path_m(get_base_output_path(input_path_m, output_root)),
       basename_m(input_path_m.stem().string()), extension_m(input_path_m.extension().string()),
       output_m(base_output_path_m / (basename_m + "_fuzzing_summary.txt")), path_hash_m(path_hash),
       recurse_m(recurse) {}
@@ -664,7 +668,8 @@ void fuzz(const inspection_forest_t&     forest,
           const boost::filesystem::path& output_root,
           bool                           path_hash,
           bool                           recurse) {
-    fuzzer_t(make_async_bitreader(input_path), input_path, output_root, path_hash, recurse).fuzz(forest);
+    fuzzer_t(make_async_bitreader(input_path), input_path, output_root, path_hash, recurse)
+        .fuzz(forest);
 }
 
 /****************************************************************************************************/
