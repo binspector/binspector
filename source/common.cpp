@@ -422,8 +422,9 @@ adobe::any_regular_t contextual_evaluation_engine_t::array_function_lookup(
         return adobe::any_regular_t(static_cast<double>(buffer[0]));
     } else if (name == value_peek) {
         std::size_t byte_count(1);
+        std::size_t param_count(parameter_set.size());
 
-        if (!parameter_set.empty())
+        if (param_count > 0)
             byte_count = static_cast<std::size_t>(parameter_set[0].cast<double>());
 
         rawbytes_t buffer;
@@ -434,8 +435,25 @@ adobe::any_regular_t contextual_evaluation_engine_t::array_function_lookup(
             buffer = input_m.read(byte_count);
         }
 
-        return byte_count > 1 ? adobe::any_regular_t(std::string(buffer.begin(), buffer.end())) :
-                                adobe::any_regular_t(static_cast<double>(buffer[0]));
+        if (param_count < 3)
+            return byte_count > 1 ? adobe::any_regular_t(std::string(buffer.begin(), buffer.end())) :
+                                    adobe::any_regular_t(static_cast<double>(buffer[0]));
+
+        CONSTANT_VALUE(signed);
+        CONSTANT_VALUE(unsigned);
+        CONSTANT_VALUE(float);
+        CONSTANT_VALUE(big);
+        // CONSTANT_VALUE(little);
+
+        adobe::name_t    type_name = parameter_set[1].cast<adobe::name_t>();
+        adobe::name_t    endian_name = parameter_set[2].cast<adobe::name_t>();
+        atom_base_type_t type = type_name == value_signed ?   atom_signed_k :
+                                type_name == value_unsigned ? atom_unsigned_k :
+                                type_name == value_float ?    atom_float_k :
+                                                              atom_unknown_k;
+        bool             endian = endian_name == value_big;
+
+        return ::evaluate(buffer, buffer.size() * 8, type, endian);
     } else if (name == value_card) {
         if (parameter_set.empty())
             throw std::runtime_error("card(): @field_name expected");
