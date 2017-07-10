@@ -44,11 +44,16 @@ typedef tsos<boost::filesystem::ofstream> tsofstream_t;
 
 /****************************************************************************************************/
 
+void rest() {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+}
+
+/****************************************************************************************************/
+
 template <typename T>
 auto block_on(const stlab::future<T>& f) {
-    while (!f.get_try()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
+    while (!f.get_try())
+        rest();
 
     return *f.get_try();
 }
@@ -477,9 +482,10 @@ void fuzzer_t::fuzz_recursive(const inspection_forest_t& forest,
     std::vector<stlab::future<std::size_t>> futures;
 
     constexpr std::size_t n_k{1000};
+    const std::size_t     p_k{std::thread::hardware_concurrency()};
 
     while (true) {
-        while (futures.size() < 10) {
+        while (futures.size() < p_k) {
             futures.push_back(
                 stlab::async(stlab::default_executor,
                              [ _this = this, &_forest = forest, &_avs = attack_vector_set ] {
@@ -505,6 +511,8 @@ void fuzzer_t::fuzz_recursive(const inspection_forest_t& forest,
             std::cerr << '.';
 
         progress = next_progress;
+
+        rest();
     }
 
     for (const auto& f : futures) {
