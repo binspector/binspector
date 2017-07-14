@@ -51,7 +51,7 @@ void rest() {
 /****************************************************************************************************/
 
 template <typename T>
-auto block_on(const stlab::future<T>& f) {
+T block_on(const stlab::future<T>& f) {
     while (!f.get_try())
         rest();
 
@@ -60,7 +60,7 @@ auto block_on(const stlab::future<T>& f) {
 
 /****************************************************************************************************/
 
-inline auto read(async_bitreader reader, const node_t& node) {
+inline stlab::future<rawbytes_t> read(async_bitreader reader, const node_t& node) {
     return reader(node.location_m, node.bit_count_m);
 }
 
@@ -195,7 +195,7 @@ boost::optional<std::string> fuzzer_t::fuzz_location_with_opt(
     const boost::filesystem::path& input_path,
     const inspection_position_t&   location,
     const fuzz_generator_t&        generator) {
-    auto bit_count(generator.bit_count());
+    auto bit_count = generator.bit_count();
 
     if (bit_count % 8 != 0 || !location.byte_aligned()) {
         output_m
