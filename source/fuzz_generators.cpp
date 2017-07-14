@@ -257,17 +257,11 @@ public:
         auto        all_raw(decompose(v_m));
         std::size_t n(bit_count_m / 8);
 #if BINSPECTOR_ENDIAN_LITTLE
-        auto first{std::rbegin(all_raw)};
+        auto first = std::rbegin(all_raw);
 #else
-        auto first{std::begin(all_raw)};
+        auto first = std::begin(all_raw);
 #endif
-
-        auto last{first};
-
-        while (n--)
-            ++last;
-
-        rawbytes_t result(first, last);
+        rawbytes_t result(first, first + n);
 
         return result;
     }
