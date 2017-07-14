@@ -195,7 +195,7 @@ boost::optional<std::string> fuzzer_t::fuzz_location_with_opt(
     const boost::filesystem::path& input_path,
     const inspection_position_t&   location,
     const fuzz_generator_t&        generator) {
-    auto bit_count = generator.bit_count();
+    std::size_t bit_count = generator.bit_count();
 
     if (bit_count % 8 != 0 || !location.byte_aligned()) {
         output_m
@@ -259,7 +259,7 @@ std::size_t fuzzer_t::fuzz_location_with_enumeration(const inspection_position_t
     const adobe::array_t& enumerated_option_set(entry.node_m.option_set_m);
     std::size_t           result(0);
 
-    for (const auto& enum_option : enumerated_option_set)
+    for (const adobe::any_regular_t& enum_option : enumerated_option_set)
         result +=
             fuzz_location_with(input_path_m,
                                location,
@@ -479,7 +479,11 @@ void fuzzer_t::fuzz_recursive(const inspection_forest_t& forest,
 
     std::cerr << "Fuzzing random weak points ";
 
-    std::vector<stlab::future<std::size_t>> futures;
+    typedef stlab::future<std::size_t>   future_t;
+    typedef std::vector<future_t>        futures_t;
+    typedef typename futures_t::iterator iterator;
+
+    futures_t futures;
 
     constexpr std::size_t n_k{1000};
     const std::size_t     p_k{std::thread::hardware_concurrency()};
@@ -493,10 +497,10 @@ void fuzzer_t::fuzz_recursive(const inspection_forest_t& forest,
                              }));
         }
 
-        auto mid = std::partition(
-            begin(futures), end(futures), [](auto f) { return static_cast<bool>(f.get_try()); });
+        iterator mid = std::partition(
+            begin(futures), end(futures), [](stlab::future<std::size_t> f) { return static_cast<bool>(f.get_try()); });
 
-        for (auto iter(begin(futures)); iter != mid; ++iter) {
+        for (iterator iter(begin(futures)); iter != mid; ++iter) {
             result += *iter->get_try();
         }
 
@@ -515,7 +519,7 @@ void fuzzer_t::fuzz_recursive(const inspection_forest_t& forest,
         rest();
     }
 
-    for (const auto& f : futures) {
+    for (const future_t& f : futures) {
         result += block_on(f);
     }
 
