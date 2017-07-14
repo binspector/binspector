@@ -261,7 +261,13 @@ public:
 #else
         auto first{std::begin(all_raw)};
 #endif
-        rawbytes_t result(first, std::next(first, n));
+
+        auto last{first};
+
+        while (n--)
+            ++last;
+
+        rawbytes_t result(first, last);
 
         return result;
     }
