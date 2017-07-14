@@ -56,7 +56,7 @@ fi
 cd ..
 
 echo_run git_dependency https://github.com/stlab/libraries.git 'stlab'
-echo_run git_dependency https://github.com/stlab/adobe_source_libraries 'adobe_source_libraries'
+echo_run git_dependency https://github.com/stlab/adobe_source_libraries 'adobe_source_libraries' master
 echo_run git_dependency https://github.com/stlab/adobe_platform_libraries 'adobe_platform_libraries' master
 echo_run git_dependency https://github.com/stlab/double-conversion.git 'double-conversion' master
 
