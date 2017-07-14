@@ -42,9 +42,9 @@ ADOBE_DEFINE_BITSET_OPS(node_flags_t);
 template <typename EnumType>
 inline void enum_set(EnumType& enumeration, EnumType flag, bool value = true) {
     if (value)
-        enumeration |= flag;
+        enumeration = static_cast<EnumType>(static_cast<std::uint64_t>(enumeration) | static_cast<std::uint64_t>(flag));
     else
-        enumeration &= ~flag;
+        enumeration = static_cast<EnumType>(static_cast<std::uint64_t>(enumeration) & ~static_cast<std::uint64_t>(flag));
 }
 
 template <typename EnumType>

@@ -187,10 +187,10 @@ public:
     }
 
     rawbytes_t operator()() const {
-        auto          bit_count{node_m.bit_count_m};
-        auto          type{node_m.type_m};
-        auto          big_endian{node_m.get_flag(atom_is_big_endian_k)};
-        std::uint64_t x{synthesize(raw_m, bit_count, type, big_endian)};
+        auto          bit_count = node_m.bit_count_m;
+        auto          type = node_m.type_m;
+        auto          big_endian = node_m.get_flag(atom_is_big_endian_k);
+        std::uint64_t x = synthesize(raw_m, bit_count, type, big_endian);
 
         --x;
 
@@ -217,10 +217,10 @@ public:
     }
 
     rawbytes_t operator()() const {
-        auto          bit_count{node_m.bit_count_m};
-        auto          type{node_m.type_m};
-        auto          big_endian{node_m.get_flag(atom_is_big_endian_k)};
-        std::uint64_t x{synthesize(raw_m, bit_count, type, big_endian)};
+        auto          bit_count = node_m.bit_count_m;
+        auto          type = node_m.type_m;
+        auto          big_endian = node_m.get_flag(atom_is_big_endian_k);
+        std::uint64_t x = synthesize(raw_m, bit_count, type, big_endian);
 
         ++x;
 
