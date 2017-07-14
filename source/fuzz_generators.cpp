@@ -261,7 +261,7 @@ public:
 #else
         auto first{std::begin(all_raw)};
 #endif
-        rawbytes_t result(first, first + n);
+        rawbytes_t result(first, std::next(first, n));
 
         return result;
     }
