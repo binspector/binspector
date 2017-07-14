@@ -18,16 +18,12 @@ env:
 script: "./smoke_test.sh"
 matrix:
   include:
-    os: linux
+  - os: linux
     sudo: required
     dist: trusty
-    env:
-      global:
-       # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-       #   via the "travis encrypt" command using the project repo's public key
-       - secure: "XOeI2znCzM8JAEWUroq+J/jFK9wXa+H0dh+qi9q8DFkoHPaZPCKPcORUUFun3oES/+Oy/8tR6eEBhhRZcOrTFRNP7N68SCJhiOTx5C7HVj9MZT8xvgp1dzyt8DUQ3ehIJliMutmaC4ycmw7UT+WjL8oI4dD14yE+o24sx88l484="
+    env: BUILDTOOL=bjam BUILDMODE=debug
     before_install:
-          - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+      - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
     addons:
       coverity_scan:
         project:
@@ -35,7 +31,7 @@ matrix:
           description: "Build submitted via Travis CI"
         notification_email: fosterb@gmail.com
         build_command_prepend: "./configure.sh"
-        build_command: "BUILDTOOL=bjam BUILDMODE=debug ./smoke_test.sh"
+        build_command: "./smoke_test.sh"
         branch_pattern: coverity
     addons:
       apt:
