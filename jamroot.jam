@@ -129,6 +129,7 @@ project binspector
 
         # Clang toolset specializations
         <toolset>clang:<cpp14>on
+        <toolset>clang:<cxxflags>"-pthread"
 
         # MSVC specializations
         <toolset>msvc:<cxxflags>"-DUNICODE -D_UNICODE"
