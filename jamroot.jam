@@ -117,7 +117,7 @@ feature.feature cpp14 :
     ;
 
 feature.compose <cpp14>on :
-        <cxxflags>"-std=c++14 -stdlib=libc++ -fconstexpr-depth=1024 -ftemplate-depth=1024"
+        <cxxflags>"-std=c++14 -fconstexpr-depth=1024 -ftemplate-depth=1024"
         <define>BOOST_NO_CXX11_NUMERIC_LIMITS=1
         <linkflags>"-lc++"
     ;
