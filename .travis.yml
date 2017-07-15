@@ -22,6 +22,7 @@ matrix:
     sudo: required
     dist: trusty
     env: BUILDCOVERITY=TRUE BUILDTOOL=bjam BUILDMODE=debug
+    compiler: clang
     before_install:
       - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
     addons:
