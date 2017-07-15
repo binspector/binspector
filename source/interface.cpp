@@ -53,7 +53,7 @@ void stream_out(const adobe::any_regular_t& value,
 binspector_interface_t::binspector_interface_t(std::istream& binary_file,
                                                auto_forest_t forest,
                                                std::ostream& output)
-    : input_m(binary_file), forest_m(forest), output_m(output), node_m(forest_m->begin()) {
+    : input_m(binary_file), forest_m(std::move(forest)), output_m(output), node_m(forest_m->begin()) {
     command_map_m.insert(command_map_t::value_type("q", &binspector_interface_t::quit));
     command_map_m.insert(command_map_t::value_type("quit", &binspector_interface_t::quit));
     command_map_m.insert(command_map_t::value_type("?", &binspector_interface_t::help));
