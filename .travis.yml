@@ -34,7 +34,6 @@ matrix:
         build_command_prepend: "./configure.sh"
         build_command: "./smoke_test.sh"
         branch_pattern: coverity
-    addons:
       apt:
         sources:
           - sourceline: "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.8 main"
