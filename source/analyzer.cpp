@@ -132,7 +132,8 @@ binspector_analyzer_t::binspector_analyzer_t(std::istream& binary_file,
                                              std::ostream& error)
     : input_m(binary_file), output_m(output), error_m(error), current_structure_m(0),
       current_sentry_m(invalid_position_k), forest_m(new inspection_forest_t),
-      eof_signalled_m(false), quiet_m(false), last_line_number_m(0) {}
+      current_enumerated_found_m(false), eof_signalled_m(false), quiet_m(false),
+      last_line_number_m(0) {}
 
 /****************************************************************************************************/
 
