@@ -118,7 +118,9 @@ bool duplicate_file(const boost::filesystem::path& src,
 #if BOOST_WINDOWS
 // necessary for windows?
 #else
-    chmod(dst.c_str(), S_IRUSR | S_IWUSR);
+    if (chmod(dst.c_str(), S_IRUSR | S_IWUSR)) {
+        return false;
+    }
 #endif
 
     return true;

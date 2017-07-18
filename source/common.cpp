@@ -124,7 +124,7 @@ contextual_evaluation_engine_t::contextual_evaluation_engine_t(const adobe::arra
                                                                inspection_branch_t   current_node,
                                                                bitreader_t&          input)
     : expression_m(expression), main_branch_m(main_branch), current_node_m(current_node),
-      input_m(input) {}
+      input_m(input), finalize_m(false) {}
 
 /****************************************************************************************************/
 #if 0

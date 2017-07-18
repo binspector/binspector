@@ -105,9 +105,11 @@ void detail_atom_node(bitreader_t&         input,
     output << "raw: " << std::hex;
     for (std::size_t i(0); i < raw.size(); ++i) {
         output << "0x";
-        output.width(2);
-        output.fill('0');
-        output << static_cast<int>(raw[i]) << ' ';
+        output << std::setw(2)
+               << std::setfill('0')
+               << static_cast<int>(raw[i])
+               << std::setfill(' ')
+               << ' ';
     }
     output << std::dec << "<br/>";
 

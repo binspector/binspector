@@ -202,8 +202,10 @@ rawbytes_t bitreader_t::read_bits(boost::uint64_t inbits) {
         static_cast<std::size_t>(byte_aligned_read ? read_bytes : read_bytes + 1));
     rawbytes_t result(result_size, 0);
 
+#if 0
     if (result_size == 0)
         return result; // ask for no bits - you got 'em!
+#endif
 
     if (remainder_size_m == 0) {
         input_m.read(reinterpret_cast<char*>(&result[0]), result_size);
@@ -269,11 +271,12 @@ rawbytes_t bitreader_t::read_bits(boost::uint64_t inbits) {
 
         throw std::logic_error(
             "Asking for more than the remainder present; tell fbrereto to implement this!");
-
+#if 0
         // here we have a remainder that will require all our bits get shifted accordingly.
         rawbytes_t raw(result_size, 0);
 
         input_m.read(reinterpret_cast<char*>(&result[0]), result_size);
+#endif
     }
 
     position_m += bitpos(inbits);
