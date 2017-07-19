@@ -175,6 +175,7 @@ class less_generator_t {
     rawbytes_t raw_m;
 
 public:
+    // coverity[pass_by_value] 
     less_generator_t(node_t node, rawbytes_t raw)
         : node_m(std::move(node)), raw_m(std::move(raw)) {}
 
@@ -205,6 +206,7 @@ class more_generator_t {
     rawbytes_t raw_m;
 
 public:
+    // coverity[pass_by_value] 
     more_generator_t(node_t node, rawbytes_t raw)
         : node_m(std::move(node)), raw_m(std::move(raw)) {}
 
@@ -312,12 +314,14 @@ fuzz_generator_t make_ones_generator(std::size_t bit_count) {
 
 /****************************************************************************************************/
 
+// coverity[pass_by_value] 
 fuzz_generator_t make_less_generator(node_t node, rawbytes_t raw) {
     return fuzz_generator_t{less_generator_t(std::move(node), std::move(raw))};
 }
 
 /****************************************************************************************************/
 
+// coverity[pass_by_value] 
 fuzz_generator_t make_more_generator(node_t node, rawbytes_t raw) {
     return fuzz_generator_t{more_generator_t(std::move(node), std::move(raw))};
 }

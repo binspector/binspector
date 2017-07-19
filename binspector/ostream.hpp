@@ -42,6 +42,7 @@ struct helper {
 /****************************************************************************************************/
 
 template <typename U>
+// coverity[pass_by_value] 
 helper operator<<(helper s, U&& x) {
     s.append(std::forward<U>(x));
     return s;
