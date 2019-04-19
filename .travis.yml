@@ -1,10 +1,9 @@
 language: cpp
 os: osx
-osx_image: xcode8.3
+osx_image: xcode10.2
 branches:
   only:
   - master
-  - develop
   - coverity
 notifications:
   slack:
