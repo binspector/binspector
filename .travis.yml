@@ -11,8 +11,8 @@ notifications:
 install:
   - git submodule update --init
 env:
-- BUILDTOOL=bjam BUILDMODE=debug
-- BUILDTOOL=bjam BUILDMODE=release
+- BUILDTOOL=make BUILDMODE=debug
+- BUILDTOOL=make BUILDMODE=release
 - BUILDTOOL=xcode BUILDMODE=debug
 - BUILDTOOL=xcode BUILDMODE=release
 script: "./smoke_test.sh"
@@ -21,7 +21,7 @@ matrix:
   - os: linux
     sudo: required
     dist: trusty
-    env: BUILDCOVERITY=TRUE BUILDTOOL=bjam BUILDMODE=debug
+    env: BUILDCOVERITY=TRUE BUILDTOOL=make BUILDMODE=debug
     compiler: clang
     before_install:
       - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
