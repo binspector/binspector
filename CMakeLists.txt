@@ -15,8 +15,10 @@ set(APL_SRC_FILES ${PROJECT_SOURCE_DIR}/adobe_platform_libraries/source/expressi
 
 # Remove some Boost files we know we're not using
 file(GLOB_RECURSE BOOST_THREAD_BUILD_SRC_FILES CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/boost/libs/thread/build/*.cpp)
-list(REMOVE_ITEM BOOST_SRC_FILES ${BOOST_THREAD_BUILD_SRC_FILES})
-list(REMOVE_ITEM BOOST_SRC_FILES ${PROJECT_SOURCE_DIR}/boost/libs/thread/src/pthread/once.cpp)
+list(REMOVE_ITEM BOOST_SRC_FILES
+    ${BOOST_THREAD_BUILD_SRC_FILES}
+    ${PROJECT_SOURCE_DIR}/boost/libs/thread/src/pthread/once.cpp
+)
 
 # Remove some ASL files we know we're not using
 list(REMOVE_ITEM ASL_SRC_FILES ${PROJECT_SOURCE_DIR}/adobe_source_libraries/source/eve.cpp)
@@ -34,7 +36,8 @@ add_executable(binspector
                ${BOOST_SRC_FILES}
                ${DBL_CONV_SRC_FILES}
                ${ASL_SRC_FILES}
-               ${APL_SRC_FILES})
+               ${APL_SRC_FILES}
+)
 
 add_compile_definitions(ADOBE_STD_SERIALIZATION=1)
 
