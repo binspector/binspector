@@ -219,11 +219,11 @@ int main(int argc, char** argv) try {
     if (output_mode == "cli") {
         std::cout << combostream.str();
 
-        binspector_interface_t interface(binary, forest, std::cout);
+        binspector_interface_t interface(binary, std::move(forest), std::cout);
 
         interface.command_line();
     } else if (output_mode == "text") {
-        binspector_interface_t interface(binary, forest, std::cout);
+        binspector_interface_t interface(binary, std::move(forest), std::cout);
         bool                   ok_to_dump(true);
 
         if (!dump_path.empty()) {
@@ -240,7 +240,7 @@ int main(int argc, char** argv) try {
         else
             throw std::runtime_error("Text dump error.");
     } else if (output_mode == "html") {
-        binspector_html_dump(binary, forest, std::cout, outstream.str(), errstream.str());
+        binspector_html_dump(binary, std::move(forest), std::cout, outstream.str(), errstream.str());
     } else if (output_mode == "validate") {
         std::cout << combostream.str();
     } else if (output_mode == "fuzz") {

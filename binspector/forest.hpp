@@ -147,7 +147,7 @@ typedef inspection_forest_t::const_iterator          const_inspection_branch_t;
 typedef inspection_forest_t::const_preorder_iterator const_preorder_iterator_t;
 typedef adobe::depth_fullorder_iterator<boost::range_iterator<inspection_forest_t>::type>
                                            depth_full_iterator_t;
-typedef std::auto_ptr<inspection_forest_t> auto_forest_t;
+typedef std::unique_ptr<inspection_forest_t> auto_forest_t;
 
 template <typename T>
 struct node_member {

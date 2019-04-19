@@ -108,17 +108,18 @@ path-constant apl-path : $(apl-path) ;
 
 echo apl-path: $(apl-path) ;
 
-# Set up c++14 support as a feature so it will propagate into the
+# Set up c++17 support as a feature so it will propagate into the
 # boost dependencies
 
-feature.feature cpp14 :
+feature.feature cpp17 :
     on :
     composite optional propagated
     ;
 
-feature.compose <cpp14>on :
-        <cxxflags>"-std=c++14 -stdlib=libc++ -fconstexpr-depth=1024 -ftemplate-depth=1024"
+feature.compose <cpp17>on :
+        <cxxflags>"-std=c++17 -stdlib=libc++ -fconstexpr-depth=1024 -ftemplate-depth=1024"
         <define>BOOST_NO_CXX11_NUMERIC_LIMITS=1
+        <define>BOOST_NO_AUTO_PTR=1
         <linkflags>"-lc++"
     ;
 
@@ -129,7 +130,7 @@ project binspector
         <define>ADOBE_STD_SERIALIZATION=1
 
         # Clang toolset specializations
-        <toolset>clang:<cpp14>on
+        <toolset>clang:<cpp17>on
 
         # MSVC specializations
         <toolset>msvc:<cxxflags>"-DUNICODE -D_UNICODE"

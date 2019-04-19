@@ -55,7 +55,7 @@ public:
     bool analyze_binary(const std::string& starting_struct);
 
     auto_forest_t forest() {
-        return forest_m;
+        return std::move(forest_m);
     }
 
     const structure_map_t& structure_map() const {
