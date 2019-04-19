@@ -25,32 +25,13 @@ Binspector is a command-line tool with various output methods (including its own
 
 ## Building From Source
 
-### Overview
+These instructions assume a command line interface for most of the operations. If you are using a GUI (such as GitHub's client) your mileage may vary.
 
-The sources for binspector have been moved to GitHub. These instructions assume a command line interface for most of the operations. If you are using a GUI (such as GitHub's client) your mileage may vary.
+Building is done with `CMake`. The typical workflow is to start at the top of the repository, and run:
 
-### Pre-Development Setup
+- `mkdir build`
+- `cd build`
+- `cmake .. -GXcode` (or whatever generator flavor you prefer)
+- `xcodebuild ` (or `make`, or...)
 
-To set up building binspector, first run `configure.sh` at the top of the repository. This will download the necessary dependencies. You should need to do this step infrequently.
-
-Dependency list:
- * Boost
- * Adobe Platform Libraries https://github.com/stlab/adobe_platform_libraries
- * Adobe Source Libraries https://github.com/stlab/adobe_source_libraries
- * stlab "libraries" https://github.com/stlab/libraries
- * `double-conversion` https://github.com/stlab/double-conversion
-
- **Caution:** the downloads will be stored into the *parent directory* of binspector checkout. Beware of namespace clashes;
- you might already happen to have a `~/src/boost_libraries` or `~/src/bin` and thus get a directory conflict.
-
-### Option 1: Build with bjam
-
-(`bjam` has been renamed `b2` in the most recent versions of Boost. Throughout the documentation where `bjam` is referenced, `b2` is implied. My muscle memory is still making the transition.)
-
-To build binspector run the `build.sh` script at the top of the repository, or just run `b2`. In the latter case, to make the build go faster pass `-jN` to bjam, where `N` is the number of concurrent threads you want compiling the project. (`build.sh` should handle this for you.)
-
-After building, the binspector binary will be inside the `../bin` directory.
-
-### Option 2: Build with Xcode
-
-Binspector now has an Xcode project contained within the `xcode` directory of the repository. Building from within Xcode should be straightforward. All intermediate files and binaries produced will go into the same `./built_artifacts/` directory (though in a different location).
+The binary will then be found in the `build` folder (or in a subfolder, depending on the generator).
