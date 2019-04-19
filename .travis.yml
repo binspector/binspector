@@ -12,7 +12,7 @@ env:
 - BUILDTOOL=make BUILDMODE=debug
 - BUILDTOOL=make BUILDMODE=release
 - BUILDTOOL=xcode BUILDMODE=debug
-- BUILDTOOL=xcode BUILDMODE=release
+#- BUILDTOOL=xcode BUILDMODE=release # Disabled for now; there's a warning in double-conversion that kills the build.
 script: "./smoke_test.sh"
 matrix:
   include:
