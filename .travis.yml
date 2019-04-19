@@ -1,27 +1,25 @@
 language: cpp
 os: osx
-osx_image: xcode8.3
+osx_image: xcode10.2
 branches:
   only:
   - master
-  - develop
   - coverity
 notifications:
   slack:
     secure: sS8dV4uF0miMIUXolG9nmbyI0IO88+/gZaazlEkC+ZAm+K3lP4z7jHyfHEtWMF17kEnNUynYuwr39+6IqgE0uzgq7Ak+1aHQnLnmWKuceC4BuruuVp8NcMeFTndy/ZphtO3CJw7DPfBKHCpg7sfnxMONaeePumBxNhqw0BNSW6c=
-install: "./configure.sh"
 env:
-- BUILDTOOL=bjam BUILDMODE=debug
-- BUILDTOOL=bjam BUILDMODE=release
+- BUILDTOOL=make BUILDMODE=debug
+- BUILDTOOL=make BUILDMODE=release
 - BUILDTOOL=xcode BUILDMODE=debug
-- BUILDTOOL=xcode BUILDMODE=release
+#- BUILDTOOL=xcode BUILDMODE=release # Disabled for now; there's a warning in double-conversion that kills the build.
 script: "./smoke_test.sh"
 matrix:
   include:
   - os: linux
     sudo: required
     dist: trusty
-    env: BUILDCOVERITY=TRUE BUILDTOOL=bjam BUILDMODE=debug
+    env: BUILDCOVERITY=TRUE BUILDTOOL=make BUILDMODE=debug
     compiler: clang
     before_install:
       - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-

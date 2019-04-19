@@ -1,3 +1,8 @@
 #!/bin/bash
 
-find . -name '*.[c|h]pp' | xargs clang-format -style=file -i
+SOURCES=(
+    ./binspector/*.hpp
+    ./source/*.cpp
+)
+
+find ${SOURCES[@]} -name '*.[c|h]pp' | xargs clang-format -style=file -i
