@@ -16,11 +16,7 @@ env:
 script: "./smoke_test.sh"
 matrix:
   include:
-  - os: linux
-    sudo: required
-    dist: trusty
-    env: BUILDCOVERITY=TRUE BUILDTOOL=make BUILDMODE=debug
-    compiler: clang
+  - env: BUILDCOVERITY=TRUE BUILDTOOL=make BUILDMODE=debug
     before_install:
       - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
     addons:
@@ -29,17 +25,5 @@ matrix:
           name: "binspector/binspector"
           description: "Build submitted via Travis CI"
         notification_email: fosterb@gmail.com
-        build_command_prepend: "./configure.sh"
         build_command: "./smoke_test.sh"
         branch_pattern: coverity
-      apt:
-        sources:
-          - sourceline: "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.8 main"
-            key_url : "http://apt.llvm.org/llvm-snapshot.gpg.key"
-          - ubuntu-toolchain-r-test
-          - george-edison55-precise-backports
-        packages:
-          - g++-5
-          - clang-3.8
-          - cmake
-          - cmake-data
