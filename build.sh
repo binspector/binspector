@@ -18,12 +18,10 @@ fi
 
 cd `dirname $0`
 
-echo "INFO : Make sure you run the configure script before this one to ensure dependencies are in place."
-
 if [ "$BUILDTOOL" == "" ] ; then
-    echo "INFO : BUILDTOOL unknown. Defaulting to bjam."
+    echo "INFO : BUILDTOOL unknown. Defaulting to make."
 
-    BUILDTOOL="bjam"
+    BUILDTOOL="make"
 fi
 
 if [ "$BUILDTOOL" == "xcode" ] ; then
@@ -38,18 +36,20 @@ if [ "$BUILDTOOL" == "xcode" ] ; then
         CURMODE="Debug"
     fi
 
-    cd xcode
-
+    rm -rf build
+    mkdir build
+    cd build
+    cmake .. -GXcode
     xcodebuild -configuration $CURMODE
 
-elif [ "$BUILDTOOL" == "bjam" ] ; then
+elif [ "$BUILDTOOL" == "make" ] ; then
 
     if [ "$BUILDMODE" == "debug" ] ; then
         CURMODE="debug"
     elif [ "$BUILDMODE" == "release" ] ; then
         CURMODE="release"
     else
-        echo "INFO : bjam mode unknown. Defaulting to debug."
+        echo "INFO : make mode unknown. Defaulting to debug."
 
         CURMODE="debug"
     fi
@@ -66,7 +66,11 @@ elif [ "$BUILDTOOL" == "bjam" ] ; then
 
     echo "INFO : Found $PROCESSOR_COUNT processors."
 
-    ../boost_libraries/b2 --toolset=${TOOLSET:-clang} --without-python --hash -j$PROCESSOR_COUNT $CURMODE
+    rm -rf build
+    mkdir build
+    cd build
+    cmake ..
+    make -j$PROCESSOR_COUNT
 
 else
 

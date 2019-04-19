@@ -15,6 +15,7 @@
 #include <adobe/array.hpp>
 #include <adobe/enum_ops.hpp>
 #include <adobe/forest.hpp>
+#include <adobe/name.hpp>
 
 // application
 #include <binspector/bitreader.hpp>

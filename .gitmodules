@@ -1,0 +1,12 @@
+[submodule "stlab"]
+	path = stlab
+	url = https://github.com/stlab/libraries.git
+[submodule "adobe_source_libraries"]
+	path = adobe_source_libraries
+	url = https://github.com/stlab/adobe_source_libraries
+[submodule "adobe_platform_libraries"]
+	path = adobe_platform_libraries
+	url = https://github.com/stlab/adobe_platform_libraries
+[submodule "double-conversion"]
+	path = double-conversion
+	url = https://github.com/stlab/double-conversion.git
