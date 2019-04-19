@@ -1,4 +1,5 @@
-`master`: [![Build status](https://travis-ci.org/binspector/binspector.png?branch=master)](https://travis-ci.org/binspector/binspector), `develop`: [![Build status](https://travis-ci.org/binspector/binspector.png?branch=develop)](https://travis-ci.org/binspector/binspector), `coverity`: [![Coverity Scan Build Status](https://scan.coverity.com/projects/13168/badge.svg)](https://scan.coverity.com/projects/binspector-binspector)
+[![Build status](https://travis-ci.org/binspector/binspector.png?branch=master)](https://travis-ci.org/binspector/binspector)
+[![Coverity Scan Build Status](https://scan.coverity.com/projects/13168/badge.svg)](https://scan.coverity.com/projects/binspector-binspector)
 
 # What is Binspector?
 
