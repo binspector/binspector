@@ -175,6 +175,7 @@ class less_generator_t {
     rawbytes_t raw_m;
 
 public:
+    // coverity[pass_by_value] 
     less_generator_t(node_t node, rawbytes_t raw)
         : node_m(std::move(node)), raw_m(std::move(raw)) {}
 
@@ -187,10 +188,10 @@ public:
     }
 
     rawbytes_t operator()() const {
-        auto          bit_count{node_m.bit_count_m};
-        auto          type{node_m.type_m};
-        auto          big_endian{node_m.get_flag(atom_is_big_endian_k)};
-        std::uint64_t x{synthesize(raw_m, bit_count, type, big_endian)};
+        auto          bit_count = node_m.bit_count_m;
+        auto          type = node_m.type_m;
+        auto          big_endian = node_m.get_flag(atom_is_big_endian_k);
+        std::uint64_t x = synthesize(raw_m, bit_count, type, big_endian);
 
         --x;
 
@@ -205,6 +206,7 @@ class more_generator_t {
     rawbytes_t raw_m;
 
 public:
+    // coverity[pass_by_value] 
     more_generator_t(node_t node, rawbytes_t raw)
         : node_m(std::move(node)), raw_m(std::move(raw)) {}
 
@@ -217,10 +219,10 @@ public:
     }
 
     rawbytes_t operator()() const {
-        auto          bit_count{node_m.bit_count_m};
-        auto          type{node_m.type_m};
-        auto          big_endian{node_m.get_flag(atom_is_big_endian_k)};
-        std::uint64_t x{synthesize(raw_m, bit_count, type, big_endian)};
+        auto          bit_count = node_m.bit_count_m;
+        auto          type = node_m.type_m;
+        auto          big_endian = node_m.get_flag(atom_is_big_endian_k);
+        std::uint64_t x = synthesize(raw_m, bit_count, type, big_endian);
 
         ++x;
 
@@ -257,9 +259,9 @@ public:
         auto        all_raw(decompose(v_m));
         std::size_t n(bit_count_m / 8);
 #if BINSPECTOR_ENDIAN_LITTLE
-        auto first{std::rbegin(all_raw)};
+        auto first = std::rbegin(all_raw);
 #else
-        auto first{std::begin(all_raw)};
+        auto first = std::begin(all_raw);
 #endif
         rawbytes_t result(first, first + n);
 
@@ -312,12 +314,14 @@ fuzz_generator_t make_ones_generator(std::size_t bit_count) {
 
 /****************************************************************************************************/
 
+// coverity[pass_by_value] 
 fuzz_generator_t make_less_generator(node_t node, rawbytes_t raw) {
     return fuzz_generator_t{less_generator_t(std::move(node), std::move(raw))};
 }
 
 /****************************************************************************************************/
 
+// coverity[pass_by_value] 
 fuzz_generator_t make_more_generator(node_t node, rawbytes_t raw) {
     return fuzz_generator_t{more_generator_t(std::move(node), std::move(raw))};
 }

@@ -44,6 +44,11 @@ if [ "$BUILDTOOL" == "xcode" ]; then
     exit 0;
 fi
 
+if [ "$BUILDCOVERITY" == "TRUE" ]; then
+    echo "INFO : coverity build; skipping execution phase"
+    exit 0;
+fi
+
 if [ ! -e 'samples' ]; then
     mkdir 'samples'
 fi

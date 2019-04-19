@@ -1,18 +1,22 @@
 #!/bin/bash
+set -x
 
-# Run a command, and echo before doing so. Also checks the exit
-# status and quits if there was an error.
-echo_run ()
-{
-    echo "EXEC : $@"
-    "$@"
-    r=$?
-    if test $r -ne 0 ; then
-        exit $r
-    fi
-}
+if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+  sudo update-alternatives \
+    --install /usr/bin/gcc gcc /usr/bin/gcc-5 90 \
+    --slave /usr/bin/g++ g++ /usr/bin/g++-5 \
+    --slave /usr/bin/gcov gcov /usr/bin/gcov-5
+  sudo update-alternatives \
+    --install /usr/bin/clang clang /usr/bin/clang-3.8 90 \
+    --slave /usr/bin/clang++ clang++ /usr/bin/clang++-3.8
+  sudo update-alternatives --config gcc
+  sudo update-alternatives --config clang
+  if [ "$CXX" = "clang++" ]; then
+      export PATH=/usr/bin:$PATH
+  fi
+fi
 
-echo_run cd `dirname $0`
+cd `dirname $0`
 
 echo "INFO : Make sure you run the configure script before this one to ensure dependencies are in place."
 
@@ -36,7 +40,7 @@ if [ "$BUILDTOOL" == "xcode" ] ; then
 
     cd xcode
 
-    echo_run xcodebuild -configuration $CURMODE
+    xcodebuild -configuration $CURMODE
 
 elif [ "$BUILDTOOL" == "bjam" ] ; then
 
@@ -62,7 +66,7 @@ elif [ "$BUILDTOOL" == "bjam" ] ; then
 
     echo "INFO : Found $PROCESSOR_COUNT processors."
 
-    echo_run ../boost_libraries/b2 --toolset=${TOOLSET:-clang} --without-python --hash -j$PROCESSOR_COUNT $CURMODE
+    ../boost_libraries/b2 --toolset=${TOOLSET:-clang} --without-python --hash -j$PROCESSOR_COUNT $CURMODE
 
 else
 

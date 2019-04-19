@@ -1,10 +1,11 @@
-language: c++
+language: cpp
 os: osx
 osx_image: xcode8.3
 branches:
   only:
   - master
   - develop
+  - coverity
 notifications:
   slack:
     secure: sS8dV4uF0miMIUXolG9nmbyI0IO88+/gZaazlEkC+ZAm+K3lP4z7jHyfHEtWMF17kEnNUynYuwr39+6IqgE0uzgq7Ak+1aHQnLnmWKuceC4BuruuVp8NcMeFTndy/ZphtO3CJw7DPfBKHCpg7sfnxMONaeePumBxNhqw0BNSW6c=
@@ -15,3 +16,32 @@ env:
 - BUILDTOOL=xcode BUILDMODE=debug
 - BUILDTOOL=xcode BUILDMODE=release
 script: "./smoke_test.sh"
+matrix:
+  include:
+  - os: linux
+    sudo: required
+    dist: trusty
+    env: BUILDCOVERITY=TRUE BUILDTOOL=bjam BUILDMODE=debug
+    compiler: clang
+    before_install:
+      - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+    addons:
+      coverity_scan:
+        project:
+          name: "binspector/binspector"
+          description: "Build submitted via Travis CI"
+        notification_email: fosterb@gmail.com
+        build_command_prepend: "./configure.sh"
+        build_command: "./smoke_test.sh"
+        branch_pattern: coverity
+      apt:
+        sources:
+          - sourceline: "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.8 main"
+            key_url : "http://apt.llvm.org/llvm-snapshot.gpg.key"
+          - ubuntu-toolchain-r-test
+          - george-edison55-precise-backports
+        packages:
+          - g++-5
+          - clang-3.8
+          - cmake
+          - cmake-data
