@@ -14,8 +14,6 @@ echo_run ()
 
 echo_run cd `dirname $0`
 
-cd ..
-
 if [ "$BUILDMODE" == "debug" ] ; then
     CURMODE="debug"
 elif [ "$BUILDMODE" == "release" ] ; then
@@ -35,12 +33,7 @@ else
 fi
 
 # Always run build in case the sources have been touched.
-./binspector/build.sh
-
-if [ "$BUILDTOOL" == "xcode" ]; then
-    echo "INFO : xcode build; skipping execution phase"
-    exit 0;
-fi
+./build.sh
 
 if [ "$BUILDCOVERITY" == "TRUE" ]; then
     echo "INFO : coverity build; skipping execution phase"
@@ -77,12 +70,12 @@ else
     echo "INFO : $PNGPATH found: skipping download."
 fi
 
-echo_run $BINPATH -t ./binspector/test/issue1.bfft -i ./binspector/test/empty.bin -m validate
-echo_run $BINPATH -t ./binspector/test/issue11.bfft -i $JPEGPATH -m validate
-echo_run $BINPATH -t ./binspector/test/issue19.bfft -i ./binspector/test/empty.bin -m validate
-echo_run $BINPATH -t ./binspector/bfft/png.bfft -i $PNGPATH -m validate
-echo_run $BINPATH -t ./binspector/bfft/jpg.bfft -i $JPEGPATH -m validate
-echo_run $BINPATH -t ./binspector/bfft/png.bfft -i $PNGPATH -m fuzz --fuzz-recurse
-echo_run $BINPATH -t ./binspector/bfft/png.bfft -i $PNGPATH -m fuzz
-echo_run $BINPATH -t ./binspector/bfft/jpg.bfft -i $JPEGPATH -m fuzz --fuzz-recurse
-echo_run $BINPATH -t ./binspector/bfft/jpg.bfft -i $JPEGPATH -m fuzz
+echo_run $BINPATH -t ./test/issue1.bfft -i ./test/empty.bin -m validate
+echo_run $BINPATH -t ./test/issue11.bfft -i $JPEGPATH -m validate
+echo_run $BINPATH -t ./test/issue19.bfft -i ./test/empty.bin -m validate
+echo_run $BINPATH -t ./bfft/png.bfft -i $PNGPATH -m validate
+echo_run $BINPATH -t ./bfft/jpg.bfft -i $JPEGPATH -m validate
+echo_run $BINPATH -t ./bfft/png.bfft -i $PNGPATH -m fuzz --fuzz-recurse
+echo_run $BINPATH -t ./bfft/png.bfft -i $PNGPATH -m fuzz
+echo_run $BINPATH -t ./bfft/jpg.bfft -i $JPEGPATH -m fuzz --fuzz-recurse
+echo_run $BINPATH -t ./bfft/jpg.bfft -i $JPEGPATH -m fuzz

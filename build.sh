@@ -48,6 +48,14 @@ if [ "$BUILDTOOL" == "xcode" ] ; then
 
     xcodebuild -configuration $CURMODE
 
+    ERROR=$?
+    if [ "${ERROR}" != "0" ]; then
+        exit $ERROR
+    fi
+
+    mkdir -p ../bin/$CURMODE
+    cp $CURMODE/binspector ../bin/$CURMODE
+
 elif [ "$BUILDTOOL" == "make" ] ; then
 
     if [ "$BUILDMODE" == "debug" ] ; then
@@ -83,6 +91,9 @@ elif [ "$BUILDTOOL" == "make" ] ; then
     fi
 
     make -j$PROCESSOR_COUNT
+
+    mkdir -p ../bin/$CURMODE
+    cp binspector ../bin/$CURMODE
 
 else
 
