@@ -30,7 +30,17 @@ The sources for binspector have been moved to GitHub. These instructions assume 
 
 ### Pre-Development Setup
 
-To set up building binspector, first run `configure.sh` at the top of the repository. This will download and install the necessary dependencies such as Boost and the Adobe Source Libraries. You should need to do this step infrequently.
+To set up building binspector, first run `configure.sh` at the top of the repository. This will download the necessary dependencies. You should need to do this step infrequently.
+
+Dependency list:
+ * Boost
+ * Adobe Platform Libraries https://github.com/stlab/adobe_platform_libraries
+ * Adobe Source Libraries https://github.com/stlab/adobe_source_libraries
+ * stlab "libraries" https://github.com/stlab/libraries
+ * `double-conversion` https://github.com/stlab/double-conversion
+
+ **Caution:** the downloads will be stored into the *parent directory* of binspector checkout. Beware of namespace clashes;
+ you might already happen to have a `~/src/boost_libraries` or `~/src/bin` and thus get a directory conflict.
 
 ### Option 1: Build with bjam
 
