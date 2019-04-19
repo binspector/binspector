@@ -40,6 +40,12 @@ if [ "$BUILDTOOL" == "xcode" ] ; then
     mkdir build
     cd build
     cmake .. -GXcode
+
+    ERROR=$?
+    if [ "${ERROR}" != "0" ]; then
+        exit $ERROR
+    fi
+
     xcodebuild -configuration $CURMODE
 
 elif [ "$BUILDTOOL" == "make" ] ; then
@@ -70,6 +76,12 @@ elif [ "$BUILDTOOL" == "make" ] ; then
     mkdir build
     cd build
     cmake ..
+
+    ERROR=$?
+    if [ "${ERROR}" != "0" ]; then
+        exit $ERROR
+    fi
+
     make -j$PROCESSOR_COUNT
 
 else
