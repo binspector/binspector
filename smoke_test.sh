@@ -30,8 +30,6 @@ BINPATH="./bin/$CURMODE/binspector"
 
 if [ ! -e $BINPATH ]; then
     echo "INFO : $BINPATH not found: setting up."
-
-    ./binspector/configure.sh
 else
     echo "INFO : $BINPATH found: skipping setup."
 fi

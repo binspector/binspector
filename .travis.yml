@@ -9,7 +9,7 @@ notifications:
   slack:
     secure: sS8dV4uF0miMIUXolG9nmbyI0IO88+/gZaazlEkC+ZAm+K3lP4z7jHyfHEtWMF17kEnNUynYuwr39+6IqgE0uzgq7Ak+1aHQnLnmWKuceC4BuruuVp8NcMeFTndy/ZphtO3CJw7DPfBKHCpg7sfnxMONaeePumBxNhqw0BNSW6c=
 install:
-  - git submodule update --init
+  - brew upgrade cmake
 env:
 - BUILDTOOL=make BUILDMODE=debug
 - BUILDTOOL=make BUILDMODE=release
