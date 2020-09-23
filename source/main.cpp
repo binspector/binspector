@@ -40,9 +40,9 @@ typedef std::vector<boost::filesystem::path> path_set;
 
 int main(int argc, char** argv) try {
     boost::program_options::options_description cli_parameters("Options");
-    boost::filesystem::path                     template_path;
-    boost::filesystem::path                     binary_path;
-    boost::filesystem::path                     output_path;
+    std::string                                 template_path_string;
+    std::string                                 binary_path_string;
+    std::string                                 output_path_string;
     std::string                                 output_mode;
     std::string                                 starting_struct;
     std::string                                 dump_path;
@@ -53,10 +53,10 @@ int main(int argc, char** argv) try {
 
     cli_parameters.add_options()("help,?", "Print this help message then exits")(
         "template,t",
-        boost::program_options::value<boost::filesystem::path>(&template_path),
+        boost::program_options::value<std::string>(&template_path_string),
         "Specify the template file on which to base binary processing")(
         "input,i",
-        boost::program_options::value<boost::filesystem::path>(&binary_path),
+        boost::program_options::value<std::string>(&binary_path_string),
         "Specify the binary file to process")(
         "output-mode,m",
         boost::program_options::value<std::string>(&output_mode)->default_value("cli"),
@@ -71,7 +71,7 @@ int main(int argc, char** argv) try {
         boost::program_options::value<path_set>(&include_path_set)->composing(),
         "Specify additional include paths during template file parsing -- currently unimplemented")(
         "output-directory,o",
-        boost::program_options::value<boost::filesystem::path>(&output_path),
+        boost::program_options::value<std::string>(&output_path_string),
         "Specify directory for results (fuzz and dot output modes only)")(
         "path,p",
         boost::program_options::value<std::string>(&dump_path),
@@ -125,6 +125,11 @@ int main(int argc, char** argv) try {
         return 1;
     }
 
+    boost::filesystem::path template_path{template_path_string};
+    boost::filesystem::path binary_path{binary_path_string};
+    boost::filesystem::path output_path{output_path_string};
+    boost::filesystem::ifstream template_description(template_path);
+
     // Open the template file, if we can.
     if (!exists(template_path)) {
         std::string error("Template file ");
@@ -137,8 +142,6 @@ int main(int argc, char** argv) try {
 
         throw std::runtime_error(error);
     }
-
-    boost::filesystem::ifstream template_description(template_path);
 
     if (!template_description)
         throw std::runtime_error("Could not open template file");
