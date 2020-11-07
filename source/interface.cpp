@@ -15,6 +15,9 @@
 #include <adobe/istream.hpp>
 #include <adobe/implementation/expression_parser.hpp>
 
+// linenoise
+#include "linenoise.h"
+
 /****************************************************************************************************/
 
 namespace {
@@ -54,55 +57,82 @@ binspector_interface_t::binspector_interface_t(std::istream& binary_file,
                                                auto_forest_t forest,
                                                std::ostream& output)
     : input_m(binary_file), forest_m(std::move(forest)), output_m(output), node_m(forest_m->begin()) {
-    command_map_m.insert(command_map_t::value_type("q", &binspector_interface_t::quit));
-    command_map_m.insert(command_map_t::value_type("quit", &binspector_interface_t::quit));
-    command_map_m.insert(command_map_t::value_type("?", &binspector_interface_t::help));
-    command_map_m.insert(command_map_t::value_type("help", &binspector_interface_t::help));
-    command_map_m.insert(command_map_t::value_type("ll", &binspector_interface_t::print_structure));
-    command_map_m.insert(command_map_t::value_type("ls", &binspector_interface_t::print_structure));
-    command_map_m.insert(command_map_t::value_type("ps", &binspector_interface_t::print_structure));
-    command_map_m.insert(
-        command_map_t::value_type("print_struct", &binspector_interface_t::print_structure));
-    command_map_m.insert(command_map_t::value_type("pb", &binspector_interface_t::print_branch));
-    command_map_m.insert(
-        command_map_t::value_type("print_branch", &binspector_interface_t::print_branch));
-    command_map_m.insert(command_map_t::value_type("str", &binspector_interface_t::print_string));
-    command_map_m.insert(
-        command_map_t::value_type("print_string", &binspector_interface_t::print_string));
-    command_map_m.insert(command_map_t::value_type("cd", &binspector_interface_t::step_in));
-    command_map_m.insert(command_map_t::value_type("si", &binspector_interface_t::step_in));
-    command_map_m.insert(command_map_t::value_type("step_in", &binspector_interface_t::step_in));
-    command_map_m.insert(command_map_t::value_type("so", &binspector_interface_t::step_out));
-    command_map_m.insert(command_map_t::value_type("step_out", &binspector_interface_t::step_out));
-    command_map_m.insert(command_map_t::value_type("t", &binspector_interface_t::top));
-    command_map_m.insert(command_map_t::value_type("top", &binspector_interface_t::top));
-    command_map_m.insert(command_map_t::value_type("df", &binspector_interface_t::detail_field));
-    command_map_m.insert(
-        command_map_t::value_type("detail_field", &binspector_interface_t::detail_field));
-    command_map_m.insert(command_map_t::value_type("do", &binspector_interface_t::detail_offset));
-    command_map_m.insert(
-        command_map_t::value_type("detail_offset", &binspector_interface_t::detail_offset));
-    command_map_m.insert(
-        command_map_t::value_type("ee", &binspector_interface_t::evaluate_expression));
-    command_map_m.insert(
-        command_map_t::value_type("eval", &binspector_interface_t::evaluate_expression));
-    command_map_m.insert(command_map_t::value_type("evaluate_expression",
-                                                   &binspector_interface_t::evaluate_expression));
-    command_map_m.insert(command_map_t::value_type("duf", &binspector_interface_t::dump_field));
-    command_map_m.insert(
-        command_map_t::value_type("dump_field", &binspector_interface_t::dump_field));
-    command_map_m.insert(command_map_t::value_type("duo", &binspector_interface_t::dump_offset));
-    command_map_m.insert(
-        command_map_t::value_type("dump_offset", &binspector_interface_t::dump_offset));
-    command_map_m.insert(command_map_t::value_type("sf", &binspector_interface_t::save_field));
-    command_map_m.insert(
-        command_map_t::value_type("save_field", &binspector_interface_t::save_field));
-    command_map_m.insert(
-        command_map_t::value_type("usage_metrics", &binspector_interface_t::usage_metrics));
-    command_map_m.insert(command_map_t::value_type("um", &binspector_interface_t::usage_metrics));
-    command_map_m.insert(command_map_t::value_type("ff", &binspector_interface_t::find_field));
-    command_map_m.insert(
-        command_map_t::value_type("find_field", &binspector_interface_t::find_field));
+    command_map_m["q"] = &binspector_interface_t::quit;
+    command_map_m["quit"] = &binspector_interface_t::quit;
+    command_map_m["?"] = &binspector_interface_t::help;
+    command_map_m["help"] = &binspector_interface_t::help;
+    command_map_m["ll"] = &binspector_interface_t::print_structure;
+    command_map_m["ls"] = &binspector_interface_t::print_structure;
+    command_map_m["ps"] = &binspector_interface_t::print_structure;
+    command_map_m["print_struct"] = &binspector_interface_t::print_structure;
+    command_map_m["pb"] = &binspector_interface_t::print_branch;
+    command_map_m["print_branch"] = &binspector_interface_t::print_branch;
+    command_map_m["str"] = &binspector_interface_t::print_string;
+    command_map_m["print_string"] = &binspector_interface_t::print_string;
+    command_map_m["cd"] = &binspector_interface_t::step_in;
+    command_map_m["si"] = &binspector_interface_t::step_in;
+    command_map_m["step_in"] = &binspector_interface_t::step_in;
+    command_map_m["so"] = &binspector_interface_t::step_out;
+    command_map_m["step_out"] = &binspector_interface_t::step_out;
+    command_map_m["t"] = &binspector_interface_t::top;
+    command_map_m["top"] = &binspector_interface_t::top;
+    command_map_m["df"] = &binspector_interface_t::detail_field;
+    command_map_m["detail_field"] = &binspector_interface_t::detail_field;
+    command_map_m["do"] = &binspector_interface_t::detail_offset;
+    command_map_m["detail_offset"] = &binspector_interface_t::detail_offset;
+    command_map_m["ee"] = &binspector_interface_t::evaluate_expression;
+    command_map_m["eval"] = &binspector_interface_t::evaluate_expression;
+    command_map_m["evaluate_expression"] = &binspector_interface_t::evaluate_expression;
+    command_map_m["duf"] = &binspector_interface_t::dump_field;
+    command_map_m["dump_field"] = &binspector_interface_t::dump_field;
+    command_map_m["duo"] = &binspector_interface_t::dump_offset;
+    command_map_m["dump_offset"] = &binspector_interface_t::dump_offset;
+    command_map_m["sf"] = &binspector_interface_t::save_field;
+    command_map_m["save_field"] = &binspector_interface_t::save_field;
+    command_map_m["usage_metrics"] = &binspector_interface_t::usage_metrics;
+    command_map_m["um"] = &binspector_interface_t::usage_metrics;
+    command_map_m["ff"] = &binspector_interface_t::find_field;
+    command_map_m["find_field"] = &binspector_interface_t::find_field;
+
+    static const std::string dim_qualifier_k{isSupportedTerm() ? "\e[2m" : std::string()};
+    static const std::string prompt_prefix_k{" " + dim_qualifier_k};
+
+    prompt_map_m["q"] = prompt_prefix_k + "// quit binspector";
+    prompt_map_m["quit"] = prompt_map_m["q"];
+    prompt_map_m["?"] = prompt_prefix_k + "// help screen";
+    prompt_map_m["help"] = prompt_map_m["?"];
+    prompt_map_m["ll"] = prompt_prefix_k + "// output the current structure";
+    prompt_map_m["ls"] = prompt_map_m["ll"];
+    prompt_map_m["ps"] = prompt_map_m["ll"];
+    prompt_map_m["print_struct"] = prompt_map_m["ll"];
+    prompt_map_m["pb"] = prompt_prefix_k + "// recursively output the current structure forest";
+    prompt_map_m["print_branch"] = prompt_map_m["pb"];
+    prompt_map_m["str"] = prompt_prefix_k + "<node> // output <node> as a string";
+    prompt_map_m["print_string"] = prompt_map_m["str"];
+    prompt_map_m["cd"] = prompt_prefix_k + "<node> // navigate in to child <node>";
+    prompt_map_m["si"] = prompt_map_m["cd"];
+    prompt_map_m["step_in"] = prompt_map_m["cd"];
+    prompt_map_m["so"] = prompt_prefix_k + "// navigate to parent of this node";
+    prompt_map_m["step_out"] = prompt_map_m["so"];
+    prompt_map_m["t"] = prompt_prefix_k + "// navigate to top structure";
+    prompt_map_m["top"] = prompt_map_m["t"];
+    prompt_map_m["df"] = prompt_prefix_k + "<node> // print detailed info about a node";
+    prompt_map_m["detail_field"] = prompt_map_m["df"];
+    prompt_map_m["do"] = prompt_prefix_k + "<offset> // print detailed info about a node at a given offset";
+    prompt_map_m["detail_offset"] = prompt_map_m["do"];
+    prompt_map_m["ee"] = prompt_prefix_k + "<expression> // evaluate a dynamic expression";
+    prompt_map_m["eval"] = prompt_map_m["ee"];
+    prompt_map_m["evaluate_expression"] = prompt_map_m["ee"];
+    prompt_map_m["duf"] = prompt_prefix_k + "<field> [<field>] // dump the on-disk bytes interpreted by (a range of) field(s)";
+    prompt_map_m["dump_field"] = prompt_map_m["duf"];
+    prompt_map_m["duo"] = prompt_prefix_k + "<offset> <offset> // dump the on-disk bytes within a range of offsets";
+    prompt_map_m["dump_offset"] = prompt_map_m["duo"];
+    prompt_map_m["sf"] = prompt_prefix_k + "<field> [<field>] file // save (a range of) field(s) to a separate file";
+    prompt_map_m["save_field"] = prompt_map_m["sf"];
+    prompt_map_m["usage_metrics"] = prompt_prefix_k + "// print field usage metrics";
+    prompt_map_m["um"] = prompt_map_m["usage_metrics"];
+    prompt_map_m["ff"] = prompt_prefix_k + "<name> // Find child field(s) by name";
+    prompt_map_m["find_field"] = prompt_map_m["ff"];
 }
 
 /****************************************************************************************************/
@@ -662,11 +692,92 @@ void binspector_interface_t::dump_range(boost::uint64_t first, boost::uint64_t l
 
 /****************************************************************************************************/
 
+namespace {
+
+binspector_interface_t*& thunk_interface() {
+    static binspector_interface_t* value{nullptr};
+    return value;
+}
+
+void line_completion_thunk(const char *buf, linenoiseCompletions *lc) {
+    auto* cli{thunk_interface()};
+
+    assert(cli);
+
+    cli->line_completion(buf, lc);
+}
+
+char* line_hint_thunk(const char *buf, int *color, int *bold) {
+    auto* cli{thunk_interface()};
+
+    assert(cli);
+
+    return cli->line_hint(buf, color, bold);
+}
+
+} // namespace
+
+/****************************************************************************************************/
+
+char* binspector_interface_t::line_hint(const char *buf, int *color, int *bold) {
+    std::string sbuf{buf};
+
+    if (sbuf.empty()) return nullptr;
+
+    while (sbuf.back() == ' ') sbuf.pop_back();
+
+    auto cmd_iter{prompt_map_m.find(sbuf)};
+
+    if (cmd_iter == std::end(prompt_map_m)) return nullptr;
+
+    *color = 32;
+
+    return const_cast<char*>(cmd_iter->second.c_str()); // ugh const cast!
+}
+
+/****************************************************************************************************/
+
+void binspector_interface_t::line_completion(const char *buf, linenoiseCompletions *lc) {
+    // find all the children of the current node, and see if any of them start with
+    // needle, which is the end of buf after a space. If they do, add their names to the
+    // completions set.
+    std::string s_buf{buf};
+    auto spacepos{s_buf.rfind(" ")};
+
+    // need a command and a space, at least, before we can start auto-filling.
+    if (spacepos == std::string::npos) return;
+
+    std::string before{s_buf.substr(0, spacepos)};
+    std::string after{s_buf.substr(spacepos + 1)};
+
+    for (const auto& child : adobe::child_range(node_m)) {
+        std::string name{child.name_m.c_str()};
+        if (name.find(after) == std::string::size_type(0)) {
+            std::string prompt{before.empty() ? std::string() : before + ' '};
+            linenoiseAddCompletion(lc, (std::move(prompt) + name.c_str()).c_str());
+        }
+    }
+}
+
+/****************************************************************************************************/
+
 void binspector_interface_t::command_line() {
-    static std::vector<char> cl_buffer_s(1024, 0);
+    thunk_interface() = this;
+
+    linenoiseHistorySetMaxLen(20);
+    linenoiseSetCompletionCallback(line_completion_thunk);
+    linenoiseSetHintsCallback(line_hint_thunk);
+
+    char* input{nullptr};
 
     do {
-        command_segment_set_t command_segment_set(split_command_string(&cl_buffer_s[0]));
+        path_m = build_path(forest_m->begin(), node_m);
+
+        input = linenoise(('$' + path_m + "$ ").c_str());
+
+        linenoiseHistoryAdd(input);
+
+        command_segment_set_t command_segment_set(split_command_string(input));
 
         if (!command_segment_set.empty()) {
             command_map_t::const_iterator found(command_map_m.find(command_segment_set[0]));
@@ -678,10 +789,8 @@ void binspector_interface_t::command_line() {
                 (this->*found->second)(command_segment_set);
         }
 
-        path_m = build_path(forest_m->begin(), node_m);
-
-        output_m << '$' << path_m << "$ ";
-    } while (std::cin.getline(&cl_buffer_s[0], cl_buffer_s.size()));
+        linenoiseFree(input);
+    } while (true);
 }
 
 /****************************************************************************************************/
