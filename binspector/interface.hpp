@@ -26,6 +26,8 @@ class user_quit_exception_t : public std::exception {
 
 /****************************************************************************************************/
 
+struct linenoiseCompletions;
+
 class binspector_interface_t {
 public:
     binspector_interface_t(std::istream& binary_file, auto_forest_t forest, std::ostream& output);
@@ -35,6 +37,11 @@ public:
     typedef std::vector<std::string> command_segment_set_t;
     typedef bool (binspector_interface_t::*command_proc_t)(const command_segment_set_t&);
     typedef std::map<std::string, command_proc_t> command_map_t;
+    typedef std::map<std::string, std::string> prompt_map_t;
+
+    // cli handlers
+    void line_completion(const char *buf, linenoiseCompletions *lc);
+    char* line_hint(const char *buf, int *color, int *bold);
 
     // commands
     bool quit(const command_segment_set_t&);
@@ -80,6 +87,7 @@ public:
     inspection_branch_t node_m;
     std::string         path_m;
     command_map_t       command_map_m;
+    prompt_map_t        prompt_map_m;
 };
 
 /****************************************************************************************************/

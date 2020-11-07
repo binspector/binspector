@@ -12,6 +12,7 @@ file(GLOB_RECURSE BOOST_SRC_FILES CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/boost/
 file(GLOB_RECURSE DBL_CONV_SRC_FILES CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/double-conversion/src/*.cc)
 file(GLOB_RECURSE ASL_SRC_FILES CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/adobe_source_libraries/source/*.cpp)
 set(APL_SRC_FILES ${PROJECT_SOURCE_DIR}/adobe_platform_libraries/source/expression_formatter.cpp)
+set(LINENOISE_SRC_FILES ${PROJECT_SOURCE_DIR}/linenoise/linenoise.c)
 
 # Remove some Boost files we know we're not using
 file(GLOB_RECURSE BOOST_THREAD_BUILD_SRC_FILES CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/boost/libs/thread/build/*.cpp)
@@ -37,6 +38,7 @@ add_executable(binspector
                ${DBL_CONV_SRC_FILES}
                ${ASL_SRC_FILES}
                ${APL_SRC_FILES}
+               ${LINENOISE_SRC_FILES}
 )
 
 add_compile_definitions(ADOBE_STD_SERIALIZATION=1)
@@ -46,5 +48,6 @@ target_include_directories(binspector PUBLIC ${PROJECT_SOURCE_DIR}/adobe_platfor
 target_include_directories(binspector PUBLIC ${PROJECT_SOURCE_DIR}/adobe_source_libraries)
 target_include_directories(binspector PUBLIC ${PROJECT_SOURCE_DIR}/boost)
 target_include_directories(binspector PUBLIC ${PROJECT_SOURCE_DIR}/stlab)
+target_include_directories(binspector PUBLIC ${PROJECT_SOURCE_DIR}/linenoise)
 
 target_compile_options(binspector PUBLIC -Wall -Werror)
