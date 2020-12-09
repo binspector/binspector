@@ -8,6 +8,9 @@
 // identity
 #include <binspector/common.hpp>
 
+// stdc++
+#include <algorithm>
+
 // boost
 #include <boost/lexical_cast.hpp>
 //#include <boost/timer/timer.hpp>
@@ -360,6 +363,7 @@ adobe::any_regular_t contextual_evaluation_engine_t::array_function_lookup(
     CONSTANT_VALUE(padd);
     CONSTANT_VALUE(psub);
     CONSTANT_VALUE(itop);
+    CONSTANT_VALUE(itoah); // integer to hex string (c++'s itoa, hex format)
     CONSTANT_VALUE(gtell);
 
     if (name == value_sizeof) {
@@ -600,7 +604,25 @@ adobe::any_regular_t contextual_evaluation_engine_t::array_function_lookup(
         boost::uint32_t value(argument.cast<inspection_position_t>().bytes());
 
         return adobe::any_regular_t(value);
-    } else if (name == value_itop) {
+    } else if (name == value_itoah) {
+        // converts the value to a string in hex
+
+        if (parameter_set.empty())
+            throw std::runtime_error("itoah(): integer required");
+
+        const adobe::any_regular_t& argument(parameter_set[0]);
+
+        if (argument.type_info() != typeid(double))
+            throw std::runtime_error("itoah(): bad parameter type (expects an integer)");
+
+        std::stringstream ss;
+        ss << std::hex << static_cast<std::size_t>(argument.cast<double>());
+        auto s{ss.str()};
+
+        std::transform(s.begin(), s.end(), s.begin(), [](auto c){ return std::toupper(c); });
+
+        return adobe::any_regular_t("0x" + s);
+    }  else if (name == value_itop) {
         // converts the bytes portion of a pos_t to a double
 
         if (parameter_set.empty())
