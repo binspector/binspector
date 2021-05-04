@@ -24,8 +24,8 @@ list(REMOVE_ITEM BOOST_SRC_FILES
 # Remove some ASL files we know we're not using
 list(REMOVE_ITEM ASL_SRC_FILES ${PROJECT_SOURCE_DIR}/adobe_source_libraries/source/eve.cpp)
 
-# Remove some windows-specific files from the MacOS build.
-if (APPLE)
+# Remove some windows-specific files from the MacOS and Linux builds.
+if (NOT WIN32)
     file(GLOB BOOST_WIN_SRC_FILES_0 CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/boost/libs/thread/src/win32/*.cpp)
 
     list(REMOVE_ITEM BOOST_SRC_FILES ${BOOST_WIN_SRC_FILES_0})
@@ -51,3 +51,6 @@ target_include_directories(binspector PUBLIC ${PROJECT_SOURCE_DIR}/stlab)
 target_include_directories(binspector PUBLIC ${PROJECT_SOURCE_DIR}/linenoise)
 
 target_compile_options(binspector PUBLIC -Wall -Werror)
+if (UNIX)
+	target_link_libraries(binspector -lpthread)
+endif ()
