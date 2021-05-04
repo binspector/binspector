@@ -17,6 +17,8 @@
 #include <boost/thread/once.hpp>
 #include <boost/thread/tss.hpp>
 #include <boost/thread/future.hpp>
+#include <boost/thread/pthread/pthread_helpers.hpp>
+#include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
 
 #ifdef __GLIBC__
 #include <sys/sysinfo.h>
@@ -581,7 +583,7 @@ namespace boost
             if(local_thread_info->current_cond)
             {
                 boost::pthread::pthread_mutex_scoped_lock internal_lock(local_thread_info->cond_mutex);
-                BOOST_VERIFY(!pthread_cond_broadcast(local_thread_info->current_cond));
+                BOOST_VERIFY(!posix::pthread_cond_broadcast(local_thread_info->current_cond));
             }
         }
     }

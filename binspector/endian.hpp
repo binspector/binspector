@@ -12,6 +12,7 @@
 #include <algorithm>
 
 // boost
+#include <boost/endian.hpp>
 
 // asl
 
@@ -21,18 +22,18 @@
 
 enum class endian { little, big };
 
-#if __LITTLE_ENDIAN__ || defined(_M_IX86) || defined(_WIN32)
-constexpr endian endian_k{endian::little};
+#if defined(BOOST_ENDIAN_LITTLE_BYTE)
+    constexpr endian endian_k{endian::little};
 
-#define BINSPECTOR_ENDIAN_LITTLE 1
-#define BINSPECTOR_ENDIAN_BIG 0
-#endif
+    #define BINSPECTOR_ENDIAN_LITTLE 1
+    #define BINSPECTOR_ENDIAN_BIG 0
+#elif defined(BOOST_ENDIAN_BIG_BYTE)
+    constexpr endian endian_k{endian::big};
 
-#if __BIG_ENDIAN__
-constexpr endian endian_k{endian::big};
-
-#define BINSPECTOR_ENDIAN_BIG 1
-#define BINSPECTOR_ENDIAN_LITTLE 0
+    #define BINSPECTOR_ENDIAN_BIG 1
+    #define BINSPECTOR_ENDIAN_LITTLE 0
+#else
+    #error Endianness not detected.
 #endif
 
 constexpr bool endian_big_k{endian_k == endian::big};
