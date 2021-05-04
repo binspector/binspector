@@ -16,8 +16,12 @@ set(LINENOISE_SRC_FILES ${PROJECT_SOURCE_DIR}/linenoise/linenoise.c)
 
 # Remove some Boost files we know we're not using
 file(GLOB_RECURSE BOOST_THREAD_BUILD_SRC_FILES CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/boost/libs/thread/build/*.cpp)
+file(GLOB_RECURSE BOOST_ATOMIC_CONFIG_SRC_FILES CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/boost/libs/atomic/config/*.cpp)
+file(GLOB_RECURSE BOOST_FILESYSTEM_CONFIG_SRC_FILES CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/boost/libs/filesystem/config/*.cpp)
 list(REMOVE_ITEM BOOST_SRC_FILES
     ${BOOST_THREAD_BUILD_SRC_FILES}
+    ${BOOST_ATOMIC_CONFIG_SRC_FILES}
+    ${BOOST_FILESYSTEM_CONFIG_SRC_FILES}
     ${PROJECT_SOURCE_DIR}/boost/libs/thread/src/pthread/once.cpp
 )
 
@@ -30,6 +34,7 @@ if (APPLE)
 
     list(REMOVE_ITEM BOOST_SRC_FILES ${BOOST_WIN_SRC_FILES_0})
     list(REMOVE_ITEM BOOST_SRC_FILES ${PROJECT_SOURCE_DIR}/boost/libs/program_options/src/winmain.cpp)
+    list(REMOVE_ITEM BOOST_SRC_FILES ${PROJECT_SOURCE_DIR}/boost/libs/atomic/src/wait_ops_windows.cpp)
 endif ()
 
 add_executable(binspector
@@ -47,6 +52,7 @@ target_include_directories(binspector PUBLIC ${PROJECT_SOURCE_DIR})
 target_include_directories(binspector PUBLIC ${PROJECT_SOURCE_DIR}/adobe_platform_libraries)
 target_include_directories(binspector PUBLIC ${PROJECT_SOURCE_DIR}/adobe_source_libraries)
 target_include_directories(binspector PUBLIC ${PROJECT_SOURCE_DIR}/boost)
+target_include_directories(binspector PUBLIC ${PROJECT_SOURCE_DIR}/boost/libs/atomic/src)
 target_include_directories(binspector PUBLIC ${PROJECT_SOURCE_DIR}/stlab)
 target_include_directories(binspector PUBLIC ${PROJECT_SOURCE_DIR}/linenoise)
 
