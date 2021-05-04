@@ -9,15 +9,8 @@
 
 //--------------------------------------------------------------------------------------//
 
-// define BOOST_FILESYSTEM_SOURCE so that <boost/system/config.hpp> knows
-// the library is being built (possibly exporting rather than importing code)
-#define BOOST_FILESYSTEM_SOURCE
+#include "platform_config.hpp"
 
-#ifndef BOOST_SYSTEM_NO_DEPRECATED
-# define BOOST_SYSTEM_NO_DEPRECATED
-#endif
-
-#include <boost/filesystem/config.hpp>
 #include <boost/filesystem/path_traits.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/scoped_array.hpp>

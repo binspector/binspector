@@ -7,6 +7,8 @@
 
 //  Library home page: http://www.boost.org/libs/filesystem
 
+#include "platform_config.hpp"
+
 //  Old standard library configurations, particularly MingGW, don't support wide strings.
 //  Report this with an explicit error message.
 #include <boost/config.hpp>
@@ -14,15 +16,6 @@
 #   error Configuration not supported: Boost.Filesystem V3 and later requires std::wstring support
 # endif
 
-// define BOOST_FILESYSTEM_SOURCE so that <boost/system/config.hpp> knows
-// the library is being built (possibly exporting rather than importing code)
-#define BOOST_FILESYSTEM_SOURCE
-
-#ifndef BOOST_SYSTEM_NO_DEPRECATED
-# define BOOST_SYSTEM_NO_DEPRECATED
-#endif
-
-#include <boost/filesystem/config.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>  // for filesystem_error
 #include <boost/scoped_array.hpp>
@@ -30,6 +23,7 @@
 #include <boost/assert.hpp>
 #include <algorithm>
 #include <iterator>
+#include <utility>
 #include <cstddef>
 #include <cstring>
 #include <cassert>
@@ -211,7 +205,11 @@ namespace filesystem
 #      ifdef BOOST_WINDOWS_API
        || m_pathname[sep_pos+1] == preferred_separator  // or preferred_separator
 #      endif
-)) { m_pathname.erase(sep_pos, 1); } // erase the added separator
+         )
+      )
+    {
+      m_pathname.erase(m_pathname.begin() + sep_pos); // erase the added separator
+    }
   }
 
   //  modifiers  -----------------------------------------------------------------------//
@@ -226,7 +224,10 @@ namespace filesystem
 
   BOOST_FILESYSTEM_DECL path& path::remove_filename()
   {
-    m_pathname.erase(m_parent_path_end());
+    size_type end_pos(m_parent_path_end());
+    if (end_pos == string_type::npos)
+      end_pos = 0u;
+    m_pathname.erase(m_pathname.begin() + end_pos, m_pathname.end());
     return *this;
   }
 
@@ -234,7 +235,7 @@ namespace filesystem
   {
     if (!m_pathname.empty()
       && detail::is_directory_separator(m_pathname[m_pathname.size() - 1]))
-      m_pathname.erase(m_pathname.size() - 1);
+      m_pathname.erase(m_pathname.end() - 1);
     return *this;
   }
 
@@ -307,8 +308,8 @@ namespace filesystem
   {
     size_type end_pos(filename_pos(m_pathname, m_pathname.size()));
 
-    bool filename_was_separator(m_pathname.size()
-      && detail::is_directory_separator(m_pathname[end_pos]));
+    bool filename_was_separator = !m_pathname.empty()
+      && detail::is_directory_separator(m_pathname[end_pos]);
 
     // skip separators unless root directory
     size_type root_dir_pos(root_directory_start(m_pathname, end_pos));
@@ -335,7 +336,7 @@ namespace filesystem
   BOOST_FILESYSTEM_DECL path path::filename() const
   {
     size_type pos(filename_pos(m_pathname, m_pathname.size()));
-    return (m_pathname.size()
+    return (!m_pathname.empty()
               && pos
               && detail::is_directory_separator(m_pathname[pos])
               && !is_root_separator(m_pathname, pos))
@@ -384,16 +385,31 @@ namespace filesystem
 
   BOOST_FILESYSTEM_DECL path path::lexically_relative(const path& base) const
   {
-    std::pair<path::iterator, path::iterator> mm
-      = detail::mismatch(begin(), end(), base.begin(), base.end());
-    if (mm.first == begin() && mm.second == base.begin())
+    path::iterator b = begin(), e = end(), base_b = base.begin(), base_e = base.end();
+    std::pair<path::iterator, path::iterator> mm = detail::mismatch(b, e, base_b, base_e);
+    if (mm.first == b && mm.second == base_b)
       return path();
-    if (mm.first == end() && mm.second == base.end())
+    if (mm.first == e && mm.second == base_e)
       return detail::dot_path();
+
+    std::ptrdiff_t n = 0;
+    for (; mm.second != base_e; ++mm.second)
+    {
+      path const& p = *mm.second;
+      if (p == detail::dot_dot_path())
+        --n;
+      else if (!p.empty() && p != detail::dot_path())
+        ++n;
+    }
+    if (n < 0)
+      return path();
+    if (n == 0 && (mm.first == e || mm.first->empty()))
+      return detail::dot_path();
+
     path tmp;
-    for (; mm.second != base.end(); ++mm.second)
+    for (; n > 0; --n)
       tmp /= detail::dot_dot_path();
-    for (; mm.first != end(); ++mm.first)
+    for (; mm.first != e; ++mm.first)
       tmp /= *mm.first;
     return tmp;
   }
@@ -424,11 +440,12 @@ namespace filesystem
         && (itr->native())[1] == dot) // dot dot
       {
         string_type lf(temp.filename().native());
-        if (lf.size() > 0
-          && (lf.size() != 1
+        string_type::size_type lf_size = lf.size();
+        if (lf_size > 0
+          && (lf_size != 1
             || (lf[0] != dot
               && lf[0] != separator))
-          && (lf.size() != 2
+          && (lf_size != 2
             || (lf[0] != dot
               && lf[1] != dot
 #             ifdef BOOST_WINDOWS_API
@@ -464,7 +481,7 @@ namespace filesystem
       }
 
       temp /= *itr;
-    };
+    }
 
     if (temp.empty())
       temp /= detail::dot_path();
@@ -598,7 +615,7 @@ namespace
       size_type & element_pos,
       size_type & element_size,
       size_type size
-)
+  )
   {
     if (size == string_type::npos) size = src.size();
     element_pos = 0;
@@ -651,8 +668,6 @@ namespace
     if (src[cur] == colon)
       { ++element_size; }
 #   endif
-
-    return;
   }
 
 }  // unnamed namespace
