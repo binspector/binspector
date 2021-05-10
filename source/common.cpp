@@ -13,12 +13,12 @@
 
 // boost
 #include <boost/lexical_cast.hpp>
-//#include <boost/timer/timer.hpp>
 
 // asl
 #include <adobe/implementation/expression_parser.hpp>
 #include <adobe/implementation/token.hpp>
 #include <adobe/virtual_machine.hpp>
+#include <adobe/unicode.hpp>
 
 // application
 #include <binspector/endian.hpp>
@@ -344,6 +344,32 @@ inspection_branch_t contextual_evaluation_engine_t::regular_to_branch(
 
 /****************************************************************************************************/
 
+namespace {
+
+/****************************************************************************************************/
+
+template <class I>
+void endian_swap(I first, I last) {
+    constexpr auto swapper{[](auto& x){
+        constexpr auto size = sizeof(x);
+        constexpr auto end = size >> 1;
+
+        for (std::size_t i(0); i < end; ++i)
+            std::swap(reinterpret_cast<char*>(&x)[i],
+                      reinterpret_cast<char*>(&x)[size - i - 1]);
+    }};
+
+    while (first != last) {
+        swapper(*first++);
+    }
+}
+
+/****************************************************************************************************/
+
+} // namespace
+
+/****************************************************************************************************/
+
 adobe::any_regular_t contextual_evaluation_engine_t::array_function_lookup(
     adobe::name_t name, const adobe::array_t& parameter_set) {
     CONSTANT_VALUE(byte);
@@ -365,6 +391,7 @@ adobe::any_regular_t contextual_evaluation_engine_t::array_function_lookup(
     CONSTANT_VALUE(itop);
     CONSTANT_VALUE(itoah); // integer to hex string (c++'s itoa, hex format)
     CONSTANT_VALUE(gtell);
+    CONSTANT_VALUE(utf16utf8);
 
     if (name == value_sizeof) {
         if (parameter_set.empty())
@@ -684,6 +711,48 @@ adobe::any_regular_t contextual_evaluation_engine_t::array_function_lookup(
     } else if (name == value_gtell) {
         // returns the current read head position
         return adobe::any_regular_t(input_m.pos());
+    } else if (name == value_utf16utf8) {
+        if (parameter_set.empty())
+            throw std::runtime_error("utf16utf8(): @field_name expected");
+
+        inspection_branch_t leaf(regular_to_branch(parameter_set[0]));
+
+        if (node_property(leaf, NODE_PROPERTY_IS_CONST))
+            throw std::runtime_error("utf16utf8(): cannot take the string of a const");
+
+        inspection_position_t start_offset(starting_offset_for(leaf));
+        inspection_position_t end_offset(ending_offset_for(leaf));
+        inspection_position_t size(end_offset - start_offset + inspection_byte_k);
+        std::size_t byte_count{size.bytes()};
+        std::size_t utf16_code_count{byte_count / 2};
+
+        input_m.seek(start_offset);
+
+        rawbytes_t str(input_m.read(size.bytes()));
+        std::uint16_t* utf16_first{reinterpret_cast<std::uint16_t*>(&str[0])};
+        std::uint16_t* utf16_last{utf16_first + utf16_code_count};
+
+        // REVISIT: (fbrereto) The ability to get pointers to non-byte-sized atoms
+        // that are properly swapped should be made generally available.
+        // e.g. std::pair<T*, T*> transform_raw(rawbytes_t& raw);
+        // then called like:
+        // auto utf16_range = transform_raw<std::uint16_t>(raw);
+#if BINSPECTOR_ENDIAN_LITTLE
+        if (node_property(leaf, ATOM_PROPERTY_IS_BIG_ENDIAN))
+            endian_swap(utf16_first, utf16_last);
+#else
+        if (!node_property(leaf, ATOM_PROPERTY_IS_BIG_ENDIAN))
+            endian_swap(utf16_first, utf16_last);
+#endif
+
+        std::string utf8;
+        adobe::copy_utf<std::uint8_t>(utf16_first, utf16_last, std::back_inserter(utf8));
+
+        // chomp a null terminator if there is one.
+        if (!utf8.empty() && utf8.back() == 0)
+            utf8.pop_back();
+
+        return adobe::any_regular_t(std::move(utf8));
     }
 
     throw std::runtime_error(adobe::make_string("Function '", name.c_str(), "' not found"));
